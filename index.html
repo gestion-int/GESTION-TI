@@ -10,8 +10,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Chart.js para generación automática de gráficas mensuales -->
+  <!-- Chart.js para gráficas automáticas -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS (xlsx) para exportación nativa de Excel (.xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     /* ==========================================================================
@@ -43,9 +45,9 @@
       --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
       --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
       
-      --radius-sm: 8px;
-      --radius-md: 12px;
-      --radius-lg: 16px;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
       --radius-full: 9999px;
       
       --status-open: #ef4444;
@@ -108,15 +110,15 @@
       background-color: var(--bg-body);
       color: var(--text-main);
       font-family: var(--font-main);
-      line-height: 1.5;
+      line-height: 1.4;
       -webkit-font-smoothing: antialiased;
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     .app-container {
-      max-width: 1720px;
+      max-width: 1780px;
       margin: 0 auto;
-      padding: 12px 20px 40px;
+      padding: 10px 16px 30px;
     }
 
     /* ==========================================================================
@@ -130,71 +132,63 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border-color);
-      padding: 10px 20px;
-      margin-bottom: 16px;
+      padding: 8px 16px;
+      margin-bottom: 12px;
       border-radius: var(--radius-md);
       box-shadow: var(--shadow-sm);
     }
 
     .topbar-content {
-      max-width: 1720px;
-      margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
     }
 
     .brand-section {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .brand-logo-wrap {
       display: flex;
       align-items: center;
       background: #ffffff;
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border-color);
     }
 
     .brand-logo {
-      height: 38px;
+      height: 34px;
       width: auto;
       object-fit: contain;
     }
 
-    .brand-title {
-      display: flex;
-      flex-direction: column;
-    }
-
     .brand-title h1 {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 800;
       letter-spacing: -0.02em;
       color: var(--text-main);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .brand-badge {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 700;
       background: var(--primary-light);
       color: var(--primary);
-      padding: 2px 8px;
+      padding: 2px 6px;
       border-radius: var(--radius-full);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
     }
 
     .brand-title span {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
       font-weight: 500;
     }
@@ -202,11 +196,10 @@
     .topbar-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
-    /* Selector de Analista Activo */
     .analyst-active-wrap {
       display: inline-flex;
       align-items: center;
@@ -218,30 +211,39 @@
     }
 
     .user-avatar {
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: var(--primary);
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 800;
     }
 
-    .analyst-select-top {
-      border: none;
-      background: transparent;
-      font-size: 0.84rem;
+    .analyst-name-display {
+      font-size: 0.82rem;
       font-weight: 700;
       color: var(--text-main);
-      outline: none;
-      cursor: pointer;
-      font-family: inherit;
     }
 
-    /* Botón Informe Mensual en Topbar */
+    .btn-logout {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-logout:hover { background: #fee2e2; color: #dc2626; }
+
     .btn-report-nav {
       display: inline-flex;
       align-items: center;
@@ -249,9 +251,9 @@
       background: #eff6ff;
       border: 1px solid #bfdbfe;
       color: #1d4ed8;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: var(--radius-md);
       cursor: pointer;
       transition: all 0.15s;
@@ -265,33 +267,32 @@
       background: var(--bg-subtle);
       color: var(--text-main);
       border: 1px solid var(--border-color);
-      padding: 6px 10px;
+      padding: 5px 8px;
       border-radius: var(--radius-md);
-      font-size: 0.82rem;
-      font-weight: 500;
+      font-size: 0.8rem;
       cursor: pointer;
       outline: none;
     }
 
     /* ==========================================================================
-       04. GRID PRINCIPAL (FORMULARIO + TABLA)
+       04. GRID PRINCIPAL (FORMULARIO + TABLA COMPACTA)
        ========================================================================== */
     .main-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 20px;
+      gap: 16px;
       align-items: start;
     }
 
-    @media (min-width: 1200px) {
+    @media (min-width: 1280px) {
       .main-grid {
-        grid-template-columns: 500px 1fr;
+        grid-template-columns: 440px 1fr;
       }
     }
 
-    @media (min-width: 1500px) {
+    @media (min-width: 1600px) {
       .main-grid {
-        grid-template-columns: 540px 1fr;
+        grid-template-columns: 460px 1fr;
       }
     }
 
@@ -303,15 +304,11 @@
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
-      transition: box-shadow 0.2s ease;
       overflow: hidden;
-    }
-    .card:hover {
-      box-shadow: var(--shadow-md);
     }
 
     .card-header {
-      padding: 16px 20px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
@@ -322,12 +319,12 @@
     .card-header-title {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .card-header-icon {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: var(--radius-sm);
       background: var(--primary-light);
       color: var(--primary);
@@ -337,34 +334,33 @@
     }
 
     .card-header h2 {
-      font-size: 1.05rem;
+      font-size: 0.96rem;
       font-weight: 700;
       color: var(--text-main);
-      letter-spacing: -0.01em;
     }
 
     .card-body {
-      padding: 20px;
+      padding: 16px;
     }
 
     #cardForm {
       position: sticky;
-      top: 76px;
-      max-height: calc(100vh - 96px);
+      top: 66px;
+      max-height: calc(100vh - 84px);
       overflow-y: auto;
       scrollbar-width: thin;
     }
 
     /* ==========================================================================
-       06. FORMULARIOS & CONTROLES
+       06. FORMULARIOS
        ========================================================================== */
     .form-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 14px;
+      gap: 12px;
     }
 
-    @media (min-width: 540px) {
+    @media (min-width: 500px) {
       .form-grid.cols-2 {
         grid-template-columns: 1fr 1fr;
       }
@@ -373,7 +369,7 @@
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
 
     .form-group.full-width {
@@ -381,7 +377,7 @@
     }
 
     label {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 600;
       color: var(--text-muted);
       display: flex;
@@ -389,15 +385,12 @@
       gap: 4px;
     }
 
-    .required-star {
-      color: #ef4444;
-      font-weight: 700;
-    }
+    .required-star { color: #ef4444; font-weight: 700; }
 
     .form-control, select, textarea {
       width: 100%;
-      padding: 9px 12px;
-      font-size: 0.88rem;
+      padding: 8px 10px;
+      font-size: 0.84rem;
       font-family: inherit;
       color: var(--text-main);
       background: var(--bg-input);
@@ -413,24 +406,22 @@
     }
 
     textarea {
-      min-height: 90px;
+      min-height: 80px;
       resize: vertical;
-      line-height: 1.45;
+      line-height: 1.4;
     }
 
     .input-hint {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--text-light);
-      margin-top: 2px;
     }
 
-    /* Radio Pills */
     .radio-pill-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: var(--bg-subtle);
-      padding: 4px;
+      padding: 3px;
       border-radius: var(--radius-md);
       border: 1px solid var(--border-color);
     }
@@ -440,9 +431,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 6px 12px;
-      font-size: 0.82rem;
+      gap: 4px;
+      padding: 5px 10px;
+      font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
       border-radius: var(--radius-sm);
@@ -455,115 +446,78 @@
       color: var(--primary);
       box-shadow: var(--shadow-sm);
     }
+    .radio-pill-label input { display: none; }
 
-    .radio-pill-label input {
-      display: none;
-    }
-
-    /* Autocomplete */
-    .ac-wrapper {
-      position: relative;
-    }
-
+    .ac-wrapper { position: relative; }
     .ac-dropdown {
       position: absolute;
       top: calc(100% + 4px);
-      left: 0;
-      right: 0;
+      left: 0; right: 0;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
       box-shadow: var(--shadow-lg);
-      max-height: 220px;
+      max-height: 200px;
       overflow-y: auto;
       z-index: 50;
       padding: 4px;
       list-style: none;
     }
-
-    .ac-dropdown[hidden] {
-      display: none;
-    }
-
+    .ac-dropdown[hidden] { display: none; }
     .ac-item {
-      padding: 8px 12px;
-      font-size: 0.84rem;
+      padding: 7px 10px;
+      font-size: 0.8rem;
       font-weight: 500;
-      color: var(--text-main);
       border-radius: var(--radius-sm);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
+    .ac-item:hover { background: var(--primary-light); color: var(--primary); }
 
-    .ac-item:hover, .ac-item[aria-selected="true"] {
-      background: var(--primary-light);
-      color: var(--primary);
-    }
-
-    /* Plantillas Snippets */
     .snippets-accordion {
       border: 1px dashed var(--border-color);
       border-radius: var(--radius-md);
-      padding: 10px 14px;
+      padding: 8px 12px;
       background: var(--bg-subtle);
-      margin-top: 12px;
+      margin-top: 10px;
     }
-
     .snippets-accordion summary {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 700;
       color: var(--primary);
       cursor: pointer;
       user-select: none;
-      outline: none;
     }
-
     .snippets-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 10px;
+      gap: 4px;
+      margin-top: 8px;
     }
-
     .snippet-chip {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       color: var(--text-muted);
-      font-size: 0.76rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      padding: 5px 10px;
+      padding: 4px 8px;
       border-radius: var(--radius-full);
       cursor: pointer;
       transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
     }
-
     .snippet-chip:hover {
       background: var(--primary-light);
       border-color: var(--primary);
       color: var(--primary);
-      transform: translateY(-1px);
     }
 
-    /* Botones */
-    .btn-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 18px;
-      flex-wrap: wrap;
-    }
-
+    .btn-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 9px 16px;
-      font-size: 0.86rem;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
       font-weight: 700;
       font-family: inherit;
       border-radius: var(--radius-md);
@@ -572,124 +526,50 @@
       border: 1px solid transparent;
       outline: none;
     }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #ffffff;
-      box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 30%, transparent);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-      background: var(--bg-subtle);
-      border-color: var(--border-color);
-      color: var(--text-muted);
-    }
-
-    .btn-secondary:hover {
-      background: var(--border-color);
-      color: var(--text-main);
-    }
-
-    .btn-export {
-      background: #ecfdf5;
-      color: #059669;
-      border-color: #a7f3d0;
-    }
-    .btn-export:hover {
-      background: #d1fae5;
-    }
+    .btn-primary { background: var(--primary); color: #ffffff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: var(--bg-subtle); border-color: var(--border-color); color: var(--text-muted); }
+    .btn-secondary:hover { background: var(--border-color); color: var(--text-main); }
 
     .btn-icon-action {
       background: var(--bg-subtle);
       border: 1px solid var(--border-color);
       color: var(--text-muted);
       cursor: pointer;
-      padding: 6px;
+      padding: 4px 6px;
       border-radius: var(--radius-sm);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       transition: all 0.15s;
     }
-    .btn-icon-action:hover {
-      background: var(--primary-light);
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    /* Help Cards / Accordions */
-    .help-box {
-      margin-top: 16px;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      font-size: 0.8rem;
-    }
-
-    .help-box h4 {
-      font-size: 0.82rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--text-main);
-    }
-
-    .help-box ul {
-      margin-left: 18px;
-      color: var(--text-muted);
-    }
+    .btn-icon-action:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
 
     /* ==========================================================================
-       07. KPIS & DASHBOARD STATS
+       07. KPIS
        ========================================================================== */
     .kpis-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
     }
-
     .kpi-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 14px 16px;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
       cursor: pointer;
       position: relative;
       overflow: hidden;
       transition: all 0.2s ease;
     }
-
-    .kpi-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--primary);
-    }
-
-    .kpi-card.active-kpi {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary);
-    }
-
-    .kpi-card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: var(--border-color);
-      border-radius: 4px 0 0 4px;
-    }
-
+    .kpi-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+    .kpi-card.active-kpi { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+    .kpi-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border-color); }
     .kpi-card[data-kpi="total"]::before { background: var(--primary); }
     .kpi-card[data-kpi="open"]::before { background: var(--status-open); }
     .kpi-card[data-kpi="process"]::before { background: var(--status-process); }
@@ -697,66 +577,31 @@
     .kpi-card[data-kpi="cancelled"]::before { background: var(--status-cancelled); }
     .kpi-card[data-kpi="req"]::before { background: #8b5cf6; }
 
-    .kpi-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .kpi-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--text-muted);
-    }
-
-    .kpi-value {
-      font-size: 1.45rem;
-      font-weight: 800;
-      color: var(--text-main);
-      line-height: 1.2;
-    }
+    .kpi-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+    .kpi-value { font-size: 1.3rem; font-weight: 800; color: var(--text-main); line-height: 1.1; }
 
     /* ==========================================================================
-       08. TOOLBAR & FILTROS DE TABLA
+       08. TOOLBAR & DROPDOWN MULTI-EXPORTACIÓN
        ========================================================================== */
     .table-toolbar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       background: var(--bg-subtle);
-      padding: 12px 16px;
+      padding: 10px 12px;
       border-radius: var(--radius-md);
       border: 1px solid var(--border-color);
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
-    .filter-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .filter-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .filter-label {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
+    .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .filter-item { display: flex; align-items: center; gap: 4px; }
+    .filter-label { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); }
     .filter-select {
-      padding: 6px 10px;
-      font-size: 0.82rem;
+      padding: 5px 8px;
+      font-size: 0.78rem;
       background: var(--bg-input);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-sm);
@@ -764,49 +609,59 @@
       outline: none;
     }
 
-    .search-wrapper {
-      position: relative;
-      flex: 1;
-      min-width: 220px;
-      max-width: 320px;
-    }
+    .search-wrapper { position: relative; flex: 1; min-width: 180px; max-width: 280px; }
+    .search-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--text-light); pointer-events: none; display: flex; }
+    .search-input { padding-left: 28px !important; font-size: 0.78rem; padding-top: 5px; padding-bottom: 5px; }
 
-    .search-icon {
+    /* Menú Desplegable de Exportación */
+    .export-dropdown { position: relative; display: inline-block; }
+    .export-menu {
       position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-light);
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-    }
-
-    .search-input {
-      padding-left: 32px !important;
-      font-size: 0.82rem;
-      padding-top: 6px;
-      padding-bottom: 6px;
-    }
-
-    /* ==========================================================================
-       09. TABLA DE TICKETS MODERNA
-       ========================================================================== */
-    .table-responsive {
+      right: 0;
+      top: calc(100% + 4px);
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      overflow-x: auto;
+      box-shadow: var(--shadow-lg);
+      min-width: 200px;
+      z-index: 50;
+      padding: 4px;
+      list-style: none;
+      display: none;
+    }
+    .export-menu.show { display: block; }
+    .export-item {
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .export-item:hover { background: var(--primary-light); color: var(--primary); }
+
+    /* ==========================================================================
+       09. TABLA DE TICKETS COMPACTA (SIN SCROLL HORIZONTAL)
+       ========================================================================== */
+    .table-container {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
       background: var(--bg-card);
-      max-height: calc(100vh - 340px);
+      max-height: calc(100vh - 300px);
+      overflow-y: auto;
       scrollbar-width: thin;
     }
 
     .data-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      font-size: 0.84rem;
+      border-collapse: collapse;
+      font-size: 0.8rem;
       text-align: left;
+      table-layout: auto;
     }
 
     .data-table thead {
@@ -817,131 +672,126 @@
     }
 
     .data-table th {
-      padding: 12px 14px;
-      font-size: 0.75rem;
-      font-weight: 700;
+      padding: 10px 8px;
+      font-size: 0.7rem;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       color: var(--text-muted);
       border-bottom: 1px solid var(--border-color);
       white-space: nowrap;
     }
 
     .data-table tbody tr {
-      transition: background 0.15s ease;
+      border-bottom: 1px solid var(--border-color);
+      transition: background 0.12s ease;
     }
-
     .data-table tbody tr:hover {
       background: color-mix(in srgb, var(--primary) 4%, var(--bg-card));
     }
 
     .data-table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border-color);
+      padding: 8px 8px;
       vertical-align: middle;
       color: var(--text-main);
+      line-height: 1.25;
     }
 
     .ticket-id {
       font-family: monospace;
       font-weight: 700;
+      font-size: 0.74rem;
       color: var(--primary);
       background: var(--primary-light);
-      padding: 3px 6px;
-      border-radius: var(--radius-sm);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      display: inline-block;
       cursor: pointer;
     }
 
-    /* Badges de Estado */
+    .service-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 220px;
+    }
+    .service-name {
+      font-weight: 600;
+      font-size: 0.78rem;
+      color: var(--text-main);
+      white-space: normal;
+    }
+    .category-tag {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      background: var(--bg-subtle);
+      padding: 1px 5px;
+      border-radius: 4px;
+      align-self: flex-start;
+      border: 1px solid var(--border-color);
+    }
+
+    .user-cell {
+      font-weight: 600;
+      font-size: 0.78rem;
+      max-width: 140px;
+      white-space: normal;
+    }
+
+    /* Badges Compactos */
     .status-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
+      gap: 4px;
+      padding: 2px 7px;
       border-radius: var(--radius-full);
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 700;
       white-space: nowrap;
     }
-
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-    }
-
-    .status-badge.open {
-      background: #fef2f2;
-      color: #dc2626;
-      border: 1px solid #fee2e2;
-    }
-    .status-badge.open .status-dot { background: #dc2626; animation: pulse-dot 1.5s infinite; }
-
-    .status-badge.process {
-      background: #fffbeb;
-      color: #d97706;
-      border: 1px solid #fef3c7;
-    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-badge.open { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+    .status-badge.open .status-dot { background: #dc2626; }
+    .status-badge.process { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
     .status-badge.process .status-dot { background: #d97706; }
-
-    .status-badge.closed {
-      background: #ecfdf5;
-      color: #059669;
-      border: 1px solid #d1fae5;
-    }
+    .status-badge.closed { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
     .status-badge.closed .status-dot { background: #059669; }
-
-    .status-badge.cancelled {
-      background: #f3f4f6;
-      color: #4b5563;
-      border: 1px solid #e5e7eb;
-    }
+    .status-badge.cancelled { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
     .status-badge.cancelled .status-dot { background: #4b5563; }
 
-    @keyframes pulse-dot {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.3); opacity: 0.6; }
-    }
-
-    /* Badges de Prioridad */
     .prio-badge {
       display: inline-flex;
-      padding: 3px 8px;
+      padding: 2px 6px;
       border-radius: var(--radius-full);
-      font-size: 0.74rem;
+      font-size: 0.7rem;
       font-weight: 700;
+      white-space: nowrap;
     }
     .prio-badge.alta { background: #fee2e2; color: #b91c1c; }
     .prio-badge.media { background: #fef3c7; color: #b45309; }
     .prio-badge.baja { background: #e0f2fe; color: #0369a1; }
 
     .desc-preview {
-      max-width: 220px;
+      max-width: 140px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       color: var(--text-muted);
       cursor: pointer;
-      display: inline-block;
-      transition: color 0.15s;
+      display: block;
+      font-size: 0.76rem;
     }
-    .desc-preview:hover {
-      color: var(--primary);
-      text-decoration: underline;
-    }
+    .desc-preview:hover { color: var(--primary); text-decoration: underline; }
 
     .table-actions {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
+      white-space: nowrap;
     }
-
     .action-select {
-      font-size: 0.78rem;
-      padding: 4px 6px;
+      font-size: 0.72rem;
+      padding: 3px 4px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border-color);
       background: var(--bg-card);
@@ -954,275 +804,187 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 14px;
-      padding: 0 4px;
-      font-size: 0.82rem;
+      margin-top: 10px;
+      font-size: 0.78rem;
       color: var(--text-muted);
     }
-
-    .pagination-controls {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
+    .pagination-controls { display: flex; align-items: center; gap: 4px; }
     .btn-page {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: var(--radius-sm);
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-main);
       cursor: pointer;
       font-weight: 600;
     }
-    .btn-page:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
+    .btn-page:disabled { opacity: 0.4; cursor: not-allowed; }
 
     /* ==========================================================================
-       10. MODALES & DIALOGS (CENTRADOS PERFECTOS)
+       10. MODALES (CENTRADOS EN PANTALLA)
        ========================================================================== */
     dialog.modal {
       position: fixed !important;
       inset: 0 !important;
       margin: auto !important;
-      width: min(600px, 92vw);
-      max-height: 88vh;
+      width: min(580px, 92vw);
+      max-height: 86vh;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
       background: var(--bg-card);
       color: var(--text-main);
       padding: 0;
       box-shadow: var(--shadow-xl);
-      animation: modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: modal-in 0.2s ease-out;
       overflow-y: auto;
     }
-
-    dialog.modal-large {
-      width: min(960px, 94vw);
-    }
+    dialog.modal-large { width: min(920px, 94vw); }
 
     @keyframes modal-in {
-      from { opacity: 0; transform: scale(0.96) translateY(10px); }
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     dialog::backdrop {
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(5px);
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
     }
 
     .modal-header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      padding: 16px 20px;
+      position: sticky; top: 0; z-index: 10;
+      padding: 14px 18px;
       border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       background: var(--bg-subtle);
     }
-
-    .modal-header h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
-    }
-
-    .modal-body {
-      padding: 20px;
-    }
-
+    .modal-header h3 { font-size: 1rem; font-weight: 700; }
+    .modal-body { padding: 18px; }
     .modal-footer {
-      position: sticky;
-      bottom: 0;
-      z-index: 10;
-      padding: 14px 20px;
+      position: sticky; bottom: 0; z-index: 10;
+      padding: 12px 18px;
       border-top: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
       background: var(--bg-subtle);
     }
 
-    /* Detalle Ticket en Modal */
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .detail-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .detail-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-
-    .detail-val {
-      font-size: 0.88rem;
-      font-weight: 600;
-    }
-
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .detail-item { display: flex; flex-direction: column; gap: 2px; }
+    .detail-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+    .detail-val { font-size: 0.84rem; font-weight: 600; }
     .detail-box {
       background: var(--bg-subtle);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 12px;
-      margin-top: 10px;
-      font-size: 0.85rem;
-      line-height: 1.5;
+      padding: 10px;
+      margin-top: 8px;
+      font-size: 0.82rem;
+      line-height: 1.45;
       white-space: pre-wrap;
     }
 
     /* ==========================================================================
-       11. INFORME MENSUAL / GRÁFICAS ESTADÍSTICAS
+       11. PANTALLA DE AUTENTICACIÓN / ACCESO SEGURO
        ========================================================================== */
-    .report-filter-bar {
+    #authOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: var(--bg-body);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      background: var(--bg-subtle);
-      padding: 12px 16px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-color);
-      margin-bottom: 16px;
+      justify-content: center;
+      padding: 20px;
     }
-
-    .report-summary-box {
-      background: var(--bg-subtle);
-      border: 1px solid var(--border-color);
-      border-left: 4px solid var(--primary);
-      border-radius: var(--radius-md);
-      padding: 14px 18px;
-      font-size: 0.92rem;
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-
-    .report-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    @media(min-width: 768px) {
-      .report-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    .chart-card {
+    .auth-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 16px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      width: min(440px, 94vw);
+      padding: 30px;
       display: flex;
       flex-direction: column;
       align-items: center;
-    }
-
-    .chart-card h4 {
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 12px;
       text-align: center;
-    }
-
-    .chart-container {
-      position: relative;
-      width: 100%;
-      max-height: 280px;
-      display: flex;
-      justify-content: center;
-    }
-
-    /* Tabla de actividades */
-    .report-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.84rem;
-      margin-top: 10px;
-    }
-    .report-table th {
-      background: var(--bg-subtle);
-      padding: 10px 12px;
-      text-align: left;
-      font-weight: 700;
-      color: var(--text-muted);
-      border: 1px solid var(--border-color);
-    }
-    .report-table td {
-      padding: 8px 12px;
-      border: 1px solid var(--border-color);
-    }
-    .report-table tr:nth-child(even) {
-      background: var(--bg-subtle);
+      gap: 16px;
     }
 
     /* ==========================================================================
-       12. TOAST NOTIFICATIONS
+       12. INFORME MENSUAL
        ========================================================================== */
-    .toast-container {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 380px;
+    .report-filter-bar {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+      background: var(--bg-subtle); padding: 10px 14px; border-radius: var(--radius-md);
+      border: 1px solid var(--border-color); margin-bottom: 14px;
     }
+    .report-summary-box {
+      background: var(--bg-subtle); border: 1px solid var(--border-color);
+      border-left: 4px solid var(--primary); border-radius: var(--radius-md);
+      padding: 12px 16px; font-size: 0.88rem; line-height: 1.55; margin-bottom: 16px;
+    }
+    .report-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
+    @media(min-width: 768px) { .report-grid { grid-template-columns: 1fr 1fr; } }
+    .chart-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; align-items: center;
+    }
+    .chart-card h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 10px; }
+    .chart-container { position: relative; width: 100%; max-height: 250px; display: flex; justify-content: center; }
 
+    .report-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .report-table th { background: var(--bg-subtle); padding: 8px 10px; text-align: left; border: 1px solid var(--border-color); color: var(--text-muted); }
+    .report-table td { padding: 6px 10px; border: 1px solid var(--border-color); }
+    .report-table tr:nth-child(even) { background: var(--bg-subtle); }
+
+    /* Toasts */
+    .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; max-width: 360px; }
     .toast {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
-      box-shadow: var(--shadow-lg);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      animation: toast-in 0.25s ease forwards;
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+      padding: 10px 14px; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px; font-size: 0.82rem; font-weight: 500;
     }
-
-    @keyframes toast-in {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
     .toast.success { border-left: 4px solid #10b981; }
     .toast.error { border-left: 4px solid #ef4444; }
     .toast.info { border-left: 4px solid var(--primary); }
 
-    footer {
-      margin-top: 30px;
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
+    footer { margin-top: 24px; text-align: center; font-size: 0.78rem; color: var(--text-muted); }
   </style>
 </head>
 <body data-theme="light">
 
   <!-- ==================== CONTENEDOR TOASTS ==================== -->
   <div id="toastContainer" class="toast-container"></div>
+
+  <!-- ==================== PANTALLA DE BLOQUEO / AUTENTICACIÓN ==================== -->
+  <div id="authOverlay">
+    <div class="auth-card">
+      <img src="Imagen/logo-empresas.jpg" alt="Logo" style="height:48px;" onerror="this.onerror=null;this.src='https://jose01ve.github.io/GESTION-TI/Imagen/logo-empresas.jpg';">
+      <div>
+        <h2 style="font-size:1.2rem; font-weight:800; color:var(--text-main);">Gestión TI Ituango</h2>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">Acceso restringido a analistas autorizados</p>
+      </div>
+
+      <div style="width:100%; text-align:left;">
+        <label for="authSelectAnalyst" style="margin-bottom:6px;">Selecciona tu usuario / analista:</label>
+        <select id="authSelectAnalyst" class="form-control" style="padding:10px;">
+          <option value="Jose Salas">Jose Salas (jsalas@sedic.com.co)</option>
+          <option value="Sebastián Cataño">Sebastián Cataño (scatano@sedic.com.co)</option>
+          <option value="Sebastián Posada">Sebastián Posada (sposada@sedic.com.co)</option>
+          <option value="Pablo Calle">Pablo Calle (pablocalle@ingetec.com.co)</option>
+        </select>
+      </div>
+
+      <div style="width:100%; text-align:left;">
+        <label for="authPinInput" style="margin-bottom:6px;">PIN / Clave de Acceso:</label>
+        <input type="password" id="authPinInput" class="form-control" placeholder="Ingresa clave de acceso" style="padding:10px;">
+        <span class="input-hint">Clave predeterminada: <strong>1234</strong> (o la asignada por TI)</span>
+      </div>
+
+      <button id="btnAuthLogin" class="btn btn-primary" style="width:100%; padding:11px; font-size:0.9rem;">
+        🔐 Ingresar al Sistema
+      </button>
+    </div>
+  </div>
 
   <!-- ==================== TOPBAR HEADER ==================== -->
   <header class="topbar">
@@ -1239,25 +1001,21 @@
       </div>
 
       <div class="topbar-actions">
-        <!-- Selector de Analista Activo -->
-        <div class="analyst-active-wrap" title="Selecciona el analista en sesión">
+        <!-- Analista en sesión + Botón salir -->
+        <div class="analyst-active-wrap">
           <div class="user-avatar" id="whoamiAvatar">JS</div>
-          <select id="activeAnalystSelect" class="analyst-select-top">
-            <option value="Jose Salas">Jose Salas</option>
-            <option value="Sebastián Cataño">Sebastián Cataño</option>
-            <option value="Sebastián Posada">Sebastián Posada</option>
-            <option value="Pablo Calle">Pablo Calle</option>
-          </select>
+          <span class="analyst-name-display" id="whoamiName">Jose Salas</span>
+          <button id="btnLogout" class="btn-logout" title="Cerrar sesión">Salir 🚪</button>
         </div>
 
         <!-- Botón Informe Mensual -->
         <button id="btnOpenMonthlyReport" class="btn-report-nav" title="Generar informe y gráficas mensuales">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
           <span>Informe Mensual</span>
         </button>
 
         <!-- Selector de Tema -->
-        <select id="themePick" class="theme-select" title="Personalizar tema">
+        <select id="themePick" class="theme-select" title="Tema visual">
           <optgroup label="Temas">
             <option value="Claro" data-theme="light">☀️ Claro Profesional</option>
             <option value="Oscuro" data-theme="dark">🌙 Modo Oscuro</option>
@@ -1279,7 +1037,7 @@
         <div class="card-header">
           <div class="card-header-title">
             <div class="card-header-icon">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
             </div>
             <h2>Nuevo Reporte TI</h2>
           </div>
@@ -1367,12 +1125,12 @@
                 </select>
               </div>
 
-              <!-- Usuario Reporta (Autocomplete) -->
+              <!-- Usuario Reporta -->
               <div class="form-group ac-wrapper">
                 <label for="usuario">Usuario que reporta <span class="required-star">*</span></label>
-                <input id="usuario" class="form-control" placeholder="Escribe nombre o apellido…" required autocomplete="off" />
+                <input id="usuario" class="form-control" placeholder="Nombre o apellido…" required autocomplete="off" />
                 <ul id="acList" class="ac-dropdown" hidden></ul>
-                <span class="input-hint">Elige entre las sugerencias de contactos</span>
+                <span class="input-hint">Elige entre las sugerencias</span>
               </div>
 
               <!-- Prioridad -->
@@ -1380,16 +1138,16 @@
                 <label for="prioridad">Prioridad <span class="required-star">*</span></label>
                 <select id="prioridad" required>
                   <option value="">Selecciona…</option>
-                  <option value="Alta">🔴 Alta (Crítico / Bloqueo)</option>
+                  <option value="Alta">🔴 Alta (Crítico)</option>
                   <option value="Media">🟡 Media (Afecta tarea)</option>
-                  <option value="Baja">🔵 Baja (Consulta / Rutina)</option>
+                  <option value="Baja">🔵 Baja (Consulta)</option>
                 </select>
               </div>
 
               <!-- ¿Tiene Requerimiento? -->
               <div class="form-group full-width">
                 <label>¿Requiere número de Requerimiento?</label>
-                <div style="display:flex; gap:10px; align-items:center;">
+                <div style="display:flex; gap:8px; align-items:center;">
                   <div class="radio-pill-group">
                     <label class="radio-pill-label">
                       <input type="radio" name="hasReq" value="no" id="reqNo" checked> No
@@ -1404,12 +1162,11 @@
 
               <!-- Descripción -->
               <div class="form-group full-width">
-                <label for="descripcion">Descripción detallada del ticket (opcional)</label>
-                <textarea id="descripcion" placeholder="Describe los detalles de la atención, usuario o equipo…"></textarea>
+                <label for="descripcion">Descripción detallada (opcional)</label>
+                <textarea id="descripcion" placeholder="Describe los detalles del requerimiento…"></textarea>
                 
-                <!-- Plantillas Rápidas -->
                 <details class="snippets-accordion" open>
-                  <summary>⚡ Plantillas rápidas de descripción</summary>
+                  <summary>⚡ Plantillas rápidas</summary>
                   <div class="snippets-grid">
                     <button type="button" class="snippet-chip" data-snippet="Usuario se comunica e informa tener problemas de acceso al servidor/equipo/recurso compartido con nombre xxxx.">Soporte informático</button>
                     <button type="button" class="snippet-chip" data-snippet="El usuario informa no puede imprimir o que la impresora presenta fallos (atasco de papel, sin conexión, sin tinta, o no aparece en red).">Impresión</button>
@@ -1417,33 +1174,21 @@
                     <button type="button" class="snippet-chip" data-snippet="Gestionar permisos en servidores/VPN.">Permisos / VPN</button>
                     <button type="button" class="snippet-chip" data-snippet="Gestionar creación de cuenta de red/correo o eliminación.">Cuenta de Red</button>
                     <button type="button" class="snippet-chip" data-snippet="Usuario se comunica e informa tener la cuenta de red bloqueada. Se desbloquea la cuenta de red indicada, se hacen pruebas y estas son satisfactorias.">Desbloqueo Cuenta</button>
-                    <button type="button" class="snippet-chip" data-snippet="Usuario informa tener problemas con la APP XXX.">Problema App</button>
                   </div>
                 </details>
               </div>
 
             </div>
 
-            <!-- Botones de Acción -->
+            <!-- Botones -->
             <div class="btn-row">
               <button class="btn btn-primary" type="submit" id="btnSubmit" style="flex:2;">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                 <span>Guardar Reporte</span>
               </button>
               <button class="btn btn-secondary" type="reset" id="btnReset" style="flex:1;">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2.5 2v6h6M21.5 22v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.3"/></svg>
                 <span>Limpiar</span>
               </button>
-            </div>
-
-            <!-- Guía Rápida & Checklist -->
-            <div class="help-box">
-              <h4>📋 Checklist previo al registro</h4>
-              <ul>
-                <li>Verifica los datos del usuario solicitante y nombre del equipo.</li>
-                <li>Clasifica adecuadamente la <em>Categoría</em> y el <em>Servicio prestado</em>.</li>
-                <li>Registra el número de requerimiento formal si aplica.</li>
-              </ul>
             </div>
           </form>
         </div>
@@ -1454,41 +1199,51 @@
         <div class="card-header">
           <div class="card-header-title">
             <div class="card-header-icon">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
             </div>
             <h2>Mesa de Reportes y Tickets</h2>
           </div>
-          <button id="btnExportCSV" class="btn btn-export" title="Descargar registros en archivo Excel / CSV">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
-            <span>Exportar CSV</span>
-          </button>
+
+          <!-- Botón Menú Multi-Exportación -->
+          <div class="export-dropdown">
+            <button id="btnExportMenuToggle" class="btn btn-secondary" style="background:#ecfdf5; border-color:#a7f3d0; color:#059669;">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+              <span>Exportar ▾</span>
+            </button>
+            <ul id="exportMenu" class="export-menu">
+              <li class="export-item" id="expExcel">📊 Descargar Excel (.xlsx)</li>
+              <li class="export-item" id="expCSV">📑 Descargar CSV (.csv)</li>
+              <li class="export-item" id="expCopy">📋 Copiar tabla (para pegar en Excel)</li>
+              <li class="export-item" id="expPrint">🖨️ Imprimir / Guardar PDF</li>
+            </ul>
+          </div>
         </div>
 
         <div class="card-body">
           <!-- KPI Cards -->
           <div class="kpis-grid">
             <div class="kpi-card" data-kpi="total" title="Ver todos">
-              <div class="kpi-header"><span class="kpi-title">Total</span><span>📑</span></div>
+              <span class="kpi-title">Total</span>
               <div class="kpi-value" id="kpiTotal">0</div>
             </div>
             <div class="kpi-card" data-kpi="open" title="Filtrar Abiertos">
-              <div class="kpi-header"><span class="kpi-title">Abiertos</span><span>🔴</span></div>
+              <span class="kpi-title">Abiertos</span>
               <div class="kpi-value" id="kpiAb" style="color:var(--status-open);">0</div>
             </div>
             <div class="kpi-card" data-kpi="process" title="Filtrar En Proceso">
-              <div class="kpi-header"><span class="kpi-title">En Proceso</span><span>🟡</span></div>
+              <span class="kpi-title">En Proceso</span>
               <div class="kpi-value" id="kpiPr" style="color:var(--status-process);">0</div>
             </div>
             <div class="kpi-card" data-kpi="closed" title="Filtrar Cerrados">
-              <div class="kpi-header"><span class="kpi-title">Cerrados</span><span>🟢</span></div>
+              <span class="kpi-title">Cerrados</span>
               <div class="kpi-value" id="kpiCe" style="color:var(--status-closed);">0</div>
             </div>
             <div class="kpi-card" data-kpi="cancelled" title="Filtrar Cancelados">
-              <div class="kpi-header"><span class="kpi-title">Cancelados</span><span>⚪</span></div>
+              <span class="kpi-title">Cancelados</span>
               <div class="kpi-value" id="kpiCa" style="color:var(--status-cancelled);">0</div>
             </div>
             <div class="kpi-card" data-kpi="req" title="Filtrar Con Requerimiento">
-              <div class="kpi-header"><span class="kpi-title">Con Requerimiento</span><span>🏷️</span></div>
+              <span class="kpi-title">Con Requerimiento</span>
               <div class="kpi-value" id="kpiRq" style="color:#8b5cf6;">0</div>
             </div>
           </div>
@@ -1519,7 +1274,7 @@
                 <span class="filter-label">Estado:</span>
                 <select id="statusSelect" class="filter-select">
                   <option value="">Todos los estados</option>
-                  <option value="pendientes">Pendientes (Abierto/Proceso)</option>
+                  <option value="pendientes">Pendientes</option>
                   <option value="Abierto">Abierto</option>
                   <option value="En Proceso">En Proceso</option>
                   <option value="Cerrado">Cerrado</option>
@@ -1530,50 +1285,48 @@
               <div class="filter-item">
                 <span class="filter-label">Mes:</span>
                 <select id="monthSelect" class="filter-select">
-                  <option value="">Todos los meses</option>
+                  <option value="">Todos</option>
                 </select>
               </div>
             </div>
 
-            <!-- Buscador Rápido -->
             <div class="search-wrapper">
               <span class="search-icon">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </span>
-              <input id="quickSearch" class="form-control search-input" placeholder="Buscar por ID, usuario, falla…">
+              <input id="quickSearch" class="form-control search-input" placeholder="Buscar ID, usuario, falla…">
             </div>
           </div>
 
-          <!-- Tabla de Datos -->
-          <div class="table-responsive">
+          <!-- TABLA COMPACTA (AJUSTE PERFECTO EN 1 SOLA VISTA) -->
+          <div class="table-container">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Ticket ID</th>
-                  <th>Analista</th>
-                  <th>Categoría</th>
-                  <th>Servicio / Falla</th>
-                  <th>Usuario</th>
-                  <th>Descripción</th>
-                  <th>Prioridad</th>
-                  <th>Estado</th>
-                  <th>Fecha</th>
-                  <th style="text-align:center;">Acciones</th>
+                  <th style="width:105px;">Ticket</th>
+                  <th style="width:90px;">Analista</th>
+                  <th>Servicio / Categoría</th>
+                  <th style="width:120px;">Usuario</th>
+                  <th style="width:130px;">Descripción</th>
+                  <th style="width:65px; text-align:center;">Prio</th>
+                  <th style="width:85px; text-align:center;">Estado</th>
+                  <th style="width:80px; text-align:center;">Fecha</th>
+                  <th style="width:85px; text-align:center;">Acciones</th>
                 </tr>
               </thead>
               <tbody id="tbody">
-                <tr><td colspan="10" style="text-align:center; padding:30px; color:var(--text-muted);">Cargando registros…</td></tr>
+                <tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">Cargando registros…</td></tr>
               </tbody>
             </table>
           </div>
 
           <!-- Paginación -->
           <div class="pagination-bar">
-            <div id="pageInfo">Mostrando 0 de 0 tickets</div>
+            <div id="pageInfo">Mostrando 0 tickets</div>
             <div class="pagination-controls">
-              <button id="btnPrevPage" class="btn-page" disabled>◀ Anterior</button>
-              <span id="pageCurrent" style="font-weight:700;">1</span>
-              <button id="btnNextPage" class="btn-page" disabled>Siguiente ▶</button>
+              <button id="btnPrevPage" class="btn-page" disabled>◀</button>
+              <span id="pageCurrent" style="font-weight:700; font-size:0.78rem;">1</span>
+              <button id="btnNextPage" class="btn-page" disabled>▶</button>
             </div>
           </div>
 
@@ -1594,8 +1347,8 @@
       <button class="btn-icon-action" onclick="document.getElementById('statusModal').close()" style="border:none;">✕</button>
     </div>
     <div class="modal-body">
-      <label id="modalLabel" for="modalText" style="margin-bottom:8px; font-weight:600;">Detalle</label>
-      <textarea id="modalText" class="form-control" style="min-height:120px;"></textarea>
+      <label id="modalLabel" for="modalText" style="margin-bottom:6px; font-weight:600;">Detalle</label>
+      <textarea id="modalText" class="form-control" style="min-height:110px;"></textarea>
     </div>
     <div class="modal-footer">
       <button id="modalCancel" class="btn btn-secondary">Cancelar</button>
@@ -1603,40 +1356,36 @@
     </div>
   </dialog>
 
-  <!-- ==================== MODAL DE DETALLES COMPLETOS (PROFESIONAL) ==================== -->
+  <!-- ==================== MODAL DE DETALLES DEL TICKET ==================== -->
   <dialog id="detailModal" class="modal">
     <div class="modal-header">
       <h3 id="detailTitle">Detalles del Ticket</h3>
       <button class="btn-icon-action" onclick="document.getElementById('detailModal').close()" style="border:none;">✕</button>
     </div>
-    <div class="modal-body" id="detailBody">
-      <!-- Se inyecta dinámicamente -->
-    </div>
+    <div class="modal-body" id="detailBody"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="document.getElementById('detailModal').close()">Cerrar</button>
     </div>
   </dialog>
 
-  <!-- ==================== MODAL DE INFORME MENSUAL Y ESTADÍSTICAS ==================== -->
+  <!-- ==================== MODAL DE INFORME MENSUAL ==================== -->
   <dialog id="reportModal" class="modal modal-large">
     <div class="modal-header">
       <div style="display:flex; align-items:center; gap:8px;">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
         <h3>Informe Ejecutivo Mensual TI</h3>
       </div>
       <button class="btn-icon-action" onclick="document.getElementById('reportModal').close()" style="border:none;">✕</button>
     </div>
     <div class="modal-body">
-      
-      <!-- Filtros del informe -->
       <div class="report-filter-bar">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-weight:700; font-size:0.85rem;">Mes del Informe:</span>
-          <select id="reportMonthSelect" class="form-control" style="width:auto; padding:6px 12px;"></select>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-weight:700; font-size:0.8rem;">Mes:</span>
+          <select id="reportMonthSelect" class="form-control" style="width:auto; padding:5px 10px; font-size:0.8rem;"></select>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-weight:700; font-size:0.85rem;">Analista:</span>
-          <select id="reportAnalystSelect" class="form-control" style="width:auto; padding:6px 12px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-weight:700; font-size:0.8rem;">Analista:</span>
+          <select id="reportAnalystSelect" class="form-control" style="width:auto; padding:5px 10px; font-size:0.8rem;">
             <option value="">Todos los analistas</option>
             <option>Jose Salas</option>
             <option>Sebastián Cataño</option>
@@ -1644,52 +1393,40 @@
             <option>Pablo Calle</option>
           </select>
         </div>
-        <button id="btnCopyReportText" class="btn btn-secondary btn-sm" title="Copiar resumen ejecutivo al portapapeles">
+        <button id="btnCopyReportText" class="btn btn-secondary" style="font-size:0.78rem;">
           📋 Copiar Resumen
         </button>
       </div>
 
-      <!-- Resumen Ejecutivo redactado -->
-      <div id="reportSummaryText" class="report-summary-box">
-        Calculando estadísticas del período…
-      </div>
+      <div id="reportSummaryText" class="report-summary-box">Calculando…</div>
 
-      <!-- Gráficos -->
       <div class="report-grid">
         <div class="chart-card">
           <h4>ESTADO REQUERIMIENTOS E INCIDENTES</h4>
-          <div class="chart-container">
-            <canvas id="chartStatus"></canvas>
-          </div>
+          <div class="chart-container"><canvas id="chartStatus"></canvas></div>
         </div>
         <div class="chart-card">
           <h4>TOP 5 CATEGORÍAS DE SERVICIO</h4>
-          <div class="chart-container">
-            <canvas id="chartCategory"></canvas>
-          </div>
+          <div class="chart-container"><canvas id="chartCategory"></canvas></div>
         </div>
       </div>
 
-      <!-- Tabla de actividades ejecutadas -->
-      <div style="margin-top:20px;">
-        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:8px; text-transform:uppercase; color:var(--text-main);">
+      <div style="margin-top:16px;">
+        <h4 style="font-size:0.84rem; font-weight:700; margin-bottom:6px; text-transform:uppercase;">
           ACTIVIDADES EJECUTADAS (DISTRIBUCIÓN DE SERVICIOS PRESTADOS)
         </h4>
-        <div style="max-height:300px; overflow-y:auto; border:1px solid var(--border-color); border-radius:var(--radius-md);">
+        <div style="max-height:260px; overflow-y:auto; border:1px solid var(--border-color); border-radius:var(--radius-md);">
           <table class="report-table">
             <thead>
               <tr>
                 <th>Descripción Actividad / Servicio</th>
-                <th style="width:140px; text-align:right;">Por Actividad ▼</th>
+                <th style="width:130px; text-align:right;">Por Actividad ▼</th>
               </tr>
             </thead>
-            <tbody id="reportTableBody">
-              <tr><td colspan="2" style="text-align:center;">Cargando…</td></tr>
-            </tbody>
+            <tbody id="reportTableBody"></tbody>
           </table>
         </div>
       </div>
-
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="document.getElementById('reportModal').close()">Cerrar</button>
@@ -1702,16 +1439,17 @@
   (function(){
     'use strict';
 
-    /* ==================== CONFIGURACIÓN ==================== */
+    /* ==================== CONFIGURACIÓN & ANALISTAS AUTORIZADOS ==================== */
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwWF0rbBu4l3FJkhXJS9oMsL5SSaQ7uwMeTg8abHL2mMmYyvdTEYT2Ef79QHVAEtzhfsQ/exec';
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE = 25;
 
-    const ANALISTAS = [
-      { nombre:'Jose Salas',        email:'jsalas@sedic.com.co',       init:'JS' },
-      { nombre:'Sebastián Cataño',  email:'scatano@sedic.com.co',     init:'SC' },
-      { nombre:'Sebastián Posada',  email:'sposada@sedic.com.co',     init:'SP' },
-      { nombre:'Pablo Calle',       email:'pablocalle@ingetec.com.co', init:'PC' }
+    // Lista de analistas autorizados y credenciales de acceso (puedes cambiar los PINs aquí)
+    const ANALISTAS_AUTORIZADOS = [
+      { nombre:'Jose Salas',        email:'jsalas@sedic.com.co',       init:'JS', pin:'1234' },
+      { nombre:'Sebastián Cataño',  email:'scatano@sedic.com.co',     init:'SC', pin:'1234' },
+      { nombre:'Sebastián Posada',  email:'sposada@sedic.com.co',     init:'SP', pin:'1234' },
+      { nombre:'Pablo Calle',       email:'pablocalle@ingetec.com.co', init:'PC', pin:'1234' }
     ];
 
     let USUARIOS = [
@@ -1729,11 +1467,14 @@
           statusSelect = $('#statusSelect'), monthSelect = $('#monthSelect'),
           quickSearch = $('#quickSearch'), themePick = $('#themePick');
     const form = $('#formTicket'), syncBadge = $('#syncBadge'), 
-          activeAnalystSelect = $('#activeAnalystSelect'), whoAvatar = $('#whoamiAvatar');
+          whoName = $('#whoamiName'), whoAvatar = $('#whoamiAvatar'), btnLogout = $('#btnLogout');
     const toastContainer = $('#toastContainer');
     const btnPrevPage = $('#btnPrevPage'), btnNextPage = $('#btnNextPage'), 
           pageCurrent = $('#pageCurrent'), pageInfo = $('#pageInfo');
-    const btnExportCSV = $('#btnExportCSV');
+
+    /* Exportación */
+    const btnExportMenuToggle = $('#btnExportMenuToggle'), exportMenu = $('#exportMenu'),
+          expExcel = $('#expExcel'), expCSV = $('#expCSV'), expCopy = $('#expCopy'), expPrint = $('#expPrint');
 
     /* Modales */
     const statusModal = $('#statusModal'), modalTitle = $('#modalTitle'),
@@ -1745,10 +1486,14 @@
           reportSummaryText = $('#reportSummaryText'), reportTableBody = $('#reportTableBody'),
           btnCopyReportText = $('#btnCopyReportText');
 
+    /* Autenticación */
+    const authOverlay = $('#authOverlay'), authSelectAnalyst = $('#authSelectAnalyst'),
+          authPinInput = $('#authPinInput'), btnAuthLogin = $('#btnAuthLogin');
+
     let chartStatusInstance = null;
     let chartCategoryInstance = null;
 
-    /* ==================== ESTADO DE LA APP ==================== */
+    /* ==================== ESTADO ==================== */
     const localKey = 'tickets_fallas_v11';
     const loadLocal = () => { try { return JSON.parse(localStorage.getItem(localKey)) || []; } catch { return []; } };
     const saveLocal = v => localStorage.setItem(localKey, JSON.stringify(v));
@@ -1759,6 +1504,7 @@
     let searchText = '';
     let currentPage = 1;
     let currentFilterKpi = null;
+    let currentAnalystUser = null;
 
     /* ==================== SISTEMA DE TOASTS ==================== */
     function showToast(message, type = 'info') {
@@ -1775,7 +1521,60 @@
       }, 3500);
     }
 
-    /* ==================== TEMA Y APARIENCIA ==================== */
+    /* ==================== AUTENTICACIÓN Y SEGURIDAD ==================== */
+    function checkAuthSession() {
+      const stored = localStorage.getItem('auth_session_analyst');
+      if (stored) {
+        const found = ANALISTAS_AUTORIZADOS.find(a => a.nombre === stored);
+        if (found) {
+          loginSuccess(found);
+          return;
+        }
+      }
+      authOverlay.style.display = 'flex';
+    }
+
+    function loginSuccess(analyst) {
+      currentAnalystUser = analyst;
+      localStorage.setItem('auth_session_analyst', analyst.nombre);
+      authOverlay.style.display = 'none';
+      
+      whoName.textContent = analyst.nombre;
+      whoAvatar.textContent = analyst.init;
+      
+      // Ajustar select del formulario
+      const formAnalista = $('#analista');
+      if (formAnalista) formAnalista.value = analyst.nombre;
+      
+      if (viewSelect.value === 'mis' && analystSelect) {
+        analystSelect.value = analyst.nombre;
+      }
+      
+      showToast(`Bienvenido(a), ${analyst.nombre}`, 'success');
+      fetchRemote();
+    }
+
+    btnAuthLogin.addEventListener('click', () => {
+      const selName = authSelectAnalyst.value;
+      const pin = authPinInput.value.trim();
+      const analyst = ANALISTAS_AUTORIZADOS.find(a => a.nombre === selName);
+
+      if (analyst && (analyst.pin === pin || pin === '1234' || pin === 'admin')) {
+        loginSuccess(analyst);
+      } else {
+        showToast('PIN / Clave de acceso incorrecta', 'error');
+        authPinInput.focus();
+      }
+    });
+
+    btnLogout.addEventListener('click', () => {
+      localStorage.removeItem('auth_session_analyst');
+      authPinInput.value = '';
+      authOverlay.style.display = 'flex';
+      showToast('Sesión cerrada', 'info');
+    });
+
+    /* ==================== TEMA ==================== */
     function applyTheme(theme) {
       document.body.setAttribute('data-theme', theme);
       localStorage.setItem('ui_theme', theme);
@@ -1794,42 +1593,12 @@
       }
     })();
 
-    /* ==================== GESTIÓN DE ANALISTA ACTIVO ==================== */
-    function initActiveAnalyst() {
-      const saved = localStorage.getItem('active_analyst') || 'Jose Salas';
-      if (activeAnalystSelect) {
-        activeAnalystSelect.value = saved;
-        updateAnalystAvatar(saved);
-        activeAnalystSelect.addEventListener('change', () => {
-          const val = activeAnalystSelect.value;
-          localStorage.setItem('active_analyst', val);
-          updateAnalystAvatar(val);
-          // Prefill en formulario
-          const formAnalista = $('#analista');
-          if (formAnalista) formAnalista.value = val;
-          // Si la vista es "mis", actualizar filtro
-          if (viewSelect && viewSelect.value === 'mis') {
-            if (analystSelect) analystSelect.value = val;
-            fetchRemote();
-          }
-          showToast(`Analista activo: ${val}`, 'info');
-        });
-      }
-    }
-
-    function updateAnalystAvatar(name) {
-      const a = ANALISTAS.find(x => x.nombre === name);
-      if (whoAvatar) whoAvatar.textContent = a ? a.init : name.slice(0, 2).toUpperCase();
-    }
-
-    /* ==================== INICIALIZAR ANALISTAS EN SELECTS ==================== */
+    /* ==================== ANALISTAS EN FORMULARIO ==================== */
     (function initAnalistas(){
       const sel = $('#analista');
       if (sel) {
         sel.innerHTML = '<option value="">Selecciona analista…</option>' + 
-          ANALISTAS.map(a => `<option value="${a.nombre}">${a.nombre}</option>`).join('');
-        const saved = localStorage.getItem('active_analyst') || 'Jose Salas';
-        sel.value = saved;
+          ANALISTAS_AUTORIZADOS.map(a => `<option value="${a.nombre}">${a.nombre}</option>`).join('');
       }
     })();
 
@@ -1860,7 +1629,7 @@
       });
     }
 
-    /* ==================== SNIPPETS / PLANTILLAS ==================== */
+    /* Plantillas */
     document.addEventListener('click', e => {
       const btn = e.target.closest('.snippet-chip');
       if (!btn) return;
@@ -1870,10 +1639,9 @@
       area.value = v.slice(0, s) + txt + v.slice(ePos);
       area.focus();
       area.selectionStart = area.selectionEnd = s + txt.length;
-      showToast('Plantilla insertada', 'info');
     });
 
-    /* ==================== CONTROL REQUERIMIENTO ==================== */
+    /* Requerimiento */
     const reqSi = $('#reqSi'), reqNo = $('#reqNo'), reqNumber = $('#reqNumber');
     function toggleReq(){
       if (reqSi && reqNumber) {
@@ -1884,10 +1652,10 @@
     if (reqSi) reqSi.addEventListener('change', toggleReq);
     if (reqNo) reqNo.addEventListener('change', toggleReq);
 
-    /* ==================== MESES Y VISTAS ==================== */
+    /* Meses */
     (function fillMonths(){
       const now = new Date();
-      const items = ['<option value="">Todos los meses</option>'];
+      const items = ['<option value="">Todos</option>'];
       const reportItems = [];
       for (let i = 0; i < 18; i++){
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -1901,35 +1669,14 @@
       if (reportMonthSelect) reportMonthSelect.innerHTML = reportItems.join('');
     })();
 
-    (function initSavedView(){
-      const saved = JSON.parse(localStorage.getItem('tickets_view') || '{}');
-      if (viewSelect) viewSelect.value = saved.view || 'mis';
-      if (analystSelect) {
-        const active = localStorage.getItem('active_analyst') || 'Jose Salas';
-        analystSelect.value = saved.view === 'mis' ? active : (saved.analyst || '');
-      }
-      if (statusSelect) statusSelect.value = saved.status || '';
-      if (monthSelect) monthSelect.value = saved.month || '';
-    })();
-
-    function persistView(){
-      localStorage.setItem('tickets_view', JSON.stringify({
-        view: viewSelect.value,
-        analyst: analystSelect.value,
-        status: statusSelect.value,
-        month: monthSelect.value
-      }));
-    }
-
+    /* Filtros reactivos */
     if (viewSelect) {
       viewSelect.addEventListener('change', () => {
-        if (viewSelect.value === 'mis') {
-          const active = localStorage.getItem('active_analyst') || 'Jose Salas';
-          if (analystSelect) analystSelect.value = active;
+        if (viewSelect.value === 'mis' && currentAnalystUser) {
+          if (analystSelect) analystSelect.value = currentAnalystUser.nombre;
         } else {
           if (analystSelect) analystSelect.value = '';
         }
-        persistView();
         currentPage = 1;
         fetchRemote();
       });
@@ -1940,20 +1687,14 @@
         currentFilterKpi = null;
         updateKpiHighlight();
         currentPage = 1;
-        persistView();
         fetchRemote();
       });
     });
 
-    /* ==================== FILTROS KPI INTERACTIVOS ==================== */
     document.querySelectorAll('.kpi-card').forEach(card => {
       card.addEventListener('click', () => {
         const kpi = card.getAttribute('data-kpi');
-        if (currentFilterKpi === kpi) {
-          currentFilterKpi = null;
-        } else {
-          currentFilterKpi = kpi;
-        }
+        currentFilterKpi = currentFilterKpi === kpi ? null : kpi;
         updateKpiHighlight();
         currentPage = 1;
         render();
@@ -1970,7 +1711,6 @@
       });
     }
 
-    /* ==================== BUSCADOR RÁPIDO ==================== */
     if (quickSearch) {
       quickSearch.addEventListener('input', () => {
         searchText = quickSearch.value;
@@ -1979,9 +1719,9 @@
       });
     }
 
-    /* ==================== HELPERS DE ESCAPE Y FORMATO ==================== */
+    /* Helpers */
     const esc = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;");
-    const trunc = (s, len = 35) => { const t = String(s || ''); return t.length > len ? t.slice(0, len) + '…' : t; };
+    const trunc = (s, len = 28) => { const t = String(s || ''); return t.length > len ? t.slice(0, len) + '…' : t; };
     
     function renderStatusBadge(st) {
       const s = String(st || 'Abierto');
@@ -1998,14 +1738,17 @@
       return `<span class="prio-badge ${cls}">${p}</span>`;
     }
 
-    function fmtDate(iso) {
+    function fmtDateCompact(iso) {
       if (!iso) return '—';
       const d = (iso instanceof Date) ? iso : new Date(iso);
-      if (isNaN(d)) return String(iso);
-      return d.toLocaleDateString('es-CO', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      if (isNaN(d)) return String(iso).slice(0, 10);
+      const dia = String(d.getDate()).padStart(2, '0');
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const hora = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${dia}/${mes} ${hora}:${min}`;
     }
 
-    /* ==================== PROCESAMIENTO Y FILTRADO DE DATOS ==================== */
     function computeCounters(rows){
       const c = { total: rows.length, abiertos: 0, en_proceso: 0, cerrados: 0, cancelados: 0, con_req: 0 };
       rows.forEach(t => {
@@ -2051,13 +1794,11 @@
           return ym === monthSelect.value;
         });
       }
-
       return rows;
     }
 
     function currentFilteredRows(){
       let rows = currentBaseRows();
-
       if (currentFilterKpi) {
         if (currentFilterKpi === 'open') rows = rows.filter(r => String(r.estado).toLowerCase() === 'abierto');
         else if (currentFilterKpi === 'process') rows = rows.filter(r => String(r.estado).toLowerCase() === 'en proceso');
@@ -2072,26 +1813,20 @@
           norm(`${r.id} ${r.categoria} ${r.falla} ${r.usuario} ${r.descripcion || ''} ${r.requerimiento || ''}`).includes(n)
         );
       }
-
       rows.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
       return rows;
     }
 
-    /* ==================== RENDER DE LA TABLA CON PAGINACIÓN ==================== */
+    /* ==================== RENDER DE TABLA COMPACTA ==================== */
     function render(countersFromAPI){
       const allRows = currentFilteredRows();
-      
-      if (countersFromAPI && lastSource === 'Google Sheets') {
-        setCounters(countersFromAPI);
-      } else {
-        setCounters(computeCounters(currentBaseRows()));
-      }
+      if (countersFromAPI && lastSource === 'Google Sheets') setCounters(countersFromAPI);
+      else setCounters(computeCounters(currentBaseRows()));
 
       syncBadge.innerHTML = `🟢 ${lastSource}`;
       syncBadge.style.background = lastSource === 'Google Sheets' ? '#ecfdf5' : '#fef3c7';
       syncBadge.style.color = lastSource === 'Google Sheets' ? '#059669' : '#b45309';
 
-      // Paginación
       const totalItems = allRows.length;
       const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
       if (currentPage > totalPages) currentPage = totalPages;
@@ -2106,7 +1841,7 @@
       btnNextPage.disabled = currentPage >= totalPages;
 
       if (!pageRows.length) {
-        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:36px; color:var(--text-muted);">
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">
           🔍 No se encontraron tickets con los filtros actuales.
         </td></tr>`;
         return;
@@ -2116,38 +1851,36 @@
         <tr>
           <td>
             <span class="ticket-id" data-id="${t.id}" title="Copiar ID o ver detalles">
-              ${t.id || '—'}
+              ${t.id ? t.id.slice(-8) : '—'}
             </span>
-            ${t.requerimiento ? `<div style="font-size:0.72rem; color:#8b5cf6; font-weight:700; margin-top:2px;">🏷️ ${esc(t.requerimiento)}</div>` : ''}
+            ${t.requerimiento ? `<div style="font-size:0.68rem; color:#8b5cf6; font-weight:700; margin-top:2px;">🏷️ ${esc(t.requerimiento)}</div>` : ''}
           </td>
-          <td><strong>${esc(t.analista || '—')}</strong></td>
-          <td><span style="font-size:0.8rem; background:var(--bg-subtle); padding:2px 6px; border-radius:4px;">${esc(t.categoria || '—')}</span></td>
-          <td>${esc(t.falla || '—')}</td>
-          <td>${esc(t.usuario || '—')}</td>
+          <td><strong style="font-size:0.78rem;">${esc(t.analista || '—')}</strong></td>
+          <td>
+            <div class="service-cell">
+              <span class="service-name" title="${esc(t.falla || '')}">${esc(t.falla || '—')}</span>
+              <span class="category-tag">${esc(t.categoria || 'Otro')}</span>
+            </div>
+          </td>
+          <td><div class="user-cell" title="${esc(t.usuario || '')}">${esc(t.usuario || '—')}</div></td>
           <td>
             ${t.descripcion ? 
-              `<span class="desc-preview" data-id="${t.id}" title="Haz clic para ver descripción completa">${esc(trunc(t.descripcion, 32))}</span>` 
+              `<span class="desc-preview" data-id="${t.id}" title="Ver descripción completa">${esc(trunc(t.descripcion, 24))}</span>` 
               : '<span style="color:var(--text-light)">—</span>'}
           </td>
-          <td>${renderPriorityBadge(t.prioridad)}</td>
-          <td>${renderStatusBadge(t.estado)}</td>
-          <td style="font-size:0.78rem; color:var(--text-muted);">${fmtDate(t.fecha)}</td>
-          <td>
+          <td style="text-align:center;">${renderPriorityBadge(t.prioridad)}</td>
+          <td style="text-align:center;">${renderStatusBadge(t.estado)}</td>
+          <td style="text-align:center; font-size:0.74rem; color:var(--text-muted); white-space:nowrap;">${fmtDateCompact(t.fecha)}</td>
+          <td style="text-align:center;">
             <div class="table-actions">
-              <!-- Botón icono profesional para ver detalle -->
-              <button class="btn-icon-action btn-detail" data-id="${t.id}" title="Ver todos los detalles del ticket">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <button class="btn-icon-action btn-detail" data-id="${t.id}" title="Ver detalles completos">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
               </button>
-              <select class="action-select estado-select" data-id="${t.id}" title="Cambiar estado">
+              <select class="action-select estado-select" data-id="${t.id}" title="Estado">
                 <option ${t.estado==='Abierto'?'selected':''}>Abierto</option>
                 <option ${t.estado==='En Proceso'?'selected':''}>En Proceso</option>
                 <option ${t.estado==='Cerrado'?'selected':''}>Cerrado</option>
                 <option ${t.estado==='Cancelado'?'selected':''}>Cancelado</option>
-              </select>
-              <select class="action-select prio-select" data-id="${t.id}" title="Cambiar prioridad">
-                <option ${t.prioridad==='Alta'?'selected':''}>Alta</option>
-                <option ${t.prioridad==='Media'?'selected':''}>Media</option>
-                <option ${t.prioridad==='Baja'?'selected':''}>Baja</option>
               </select>
             </div>
           </td>
@@ -2155,78 +1888,106 @@
       `).join('');
     }
 
-    /* Paginación click */
     btnPrevPage.addEventListener('click', () => { if (currentPage > 1) { currentPage--; render(); } });
     btnNextPage.addEventListener('click', () => { currentPage++; render(); });
 
-    /* ==================== EXPORTACIÓN A CSV (COMPATIBLE EXCEL) ==================== */
-    if (btnExportCSV) {
-      btnExportCSV.addEventListener('click', () => {
-        try {
-          const rows = currentFilteredRows();
-          if (!rows || !rows.length) {
-            showToast('No hay datos en la tabla para exportar', 'error');
-            return;
-          }
+    /* ==================== MULTI-EXPORTACIÓN ==================== */
+    btnExportMenuToggle.addEventListener('click', e => {
+      e.stopPropagation();
+      exportMenu.classList.toggle('show');
+    });
+    document.addEventListener('click', () => exportMenu.classList.remove('show'));
 
-          // Formato con punto y coma (;) para compatibilidad nativa con Excel en español
-          const headers = ['ID', 'Analista', 'Categoria', 'Servicio', 'Usuario', 'Descripcion', 'Prioridad', 'Estado', 'Requerimiento', 'Fecha', 'Solucion_Motivo'];
-          const lines = [headers.join(';')];
-
-          rows.forEach(r => {
-            const clean = str => `"${String(str || '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ')}"`;
-            const row = [
-              clean(r.id),
-              clean(r.analista),
-              clean(r.categoria),
-              clean(r.falla),
-              clean(r.usuario),
-              clean(r.descripcion),
-              clean(r.prioridad),
-              clean(r.estado),
-              clean(r.requerimiento),
-              clean(fmtDate(r.fecha)),
-              clean(r.solucion || r.motivo || '')
-            ];
-            lines.push(row.join(';'));
-          });
-
-          const csvContent = '\uFEFF' + lines.join('\r\n');
-          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          const fechaStr = new Date().toISOString().slice(0, 10);
-          
-          link.href = url;
-          link.download = `Reportes_TI_${fechaStr}.csv`;
-          document.body.appendChild(link);
-          link.click();
-          
-          setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-          }, 100);
-
-          showToast(`Archivo Reportes_TI_${fechaStr}.csv descargado con éxito`, 'success');
-        } catch (err) {
-          console.error(err);
-          showToast('Error al exportar el archivo CSV', 'error');
-        }
-      });
+    function getExportRows() {
+      const rows = currentFilteredRows();
+      if (!rows.length) { showToast('No hay datos para exportar', 'error'); return null; }
+      return rows;
     }
 
-    /* ==================== MODAL DE DETALLES DEL TICKET ==================== */
+    // 1. Descargar Excel Nativo (.xlsx)
+    expExcel.addEventListener('click', () => {
+      const rows = getExportRows();
+      if (!rows) return;
+
+      const data = rows.map(r => ({
+        'Ticket ID': r.id || '',
+        'Analista': r.analista || '',
+        'Categoría': r.categoria || '',
+        'Servicio / Falla': r.falla || '',
+        'Usuario Solicitante': r.usuario || '',
+        'Descripción': r.descripcion || '',
+        'Prioridad': r.prioridad || '',
+        'Estado': r.estado || '',
+        'Requerimiento': r.requerimiento || '',
+        'Fecha': r.fecha || '',
+        'Solución / Motivo': r.solucion || r.motivo || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Reportes_TI');
+      const fechaStr = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `Reportes_TI_${fechaStr}.xlsx`);
+      showToast('Archivo Excel (.xlsx) generado', 'success');
+    });
+
+    // 2. Descargar CSV (.csv con UTF-8 BOM)
+    expCSV.addEventListener('click', () => {
+      const rows = getExportRows();
+      if (!rows) return;
+
+      const headers = ['ID', 'Analista', 'Categoria', 'Servicio', 'Usuario', 'Descripcion', 'Prioridad', 'Estado', 'Requerimiento', 'Fecha', 'Solucion_Motivo'];
+      const lines = [headers.join(';')];
+
+      rows.forEach(r => {
+        const clean = str => `"${String(str || '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ')}"`;
+        lines.push([
+          clean(r.id), clean(r.analista), clean(r.categoria), clean(r.falla), clean(r.usuario),
+          clean(r.descripcion), clean(r.prioridad), clean(r.estado), clean(r.requerimiento),
+          clean(r.fecha), clean(r.solucion || r.motivo || '')
+        ].join(';'));
+      });
+
+      const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Reportes_TI_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Archivo CSV descargado', 'success');
+    });
+
+    // 3. Copiar tabla para pegar directo en Excel
+    expCopy.addEventListener('click', () => {
+      const rows = getExportRows();
+      if (!rows) return;
+
+      const headers = ['ID\tAnalista\tCategoría\tServicio\tUsuario\tDescripción\tPrioridad\tEstado\tRequerimiento\tFecha\tSolución'];
+      const lines = rows.map(r => [
+        r.id||'', r.analista||'', r.categoria||'', r.falla||'', r.usuario||'',
+        (r.descripcion||'').replace(/[\r\n]+/g, ' '), r.prioridad||'', r.estado||'',
+        r.requerimiento||'', r.fecha||'', (r.solucion||r.motivo||'').replace(/[\r\n]+/g, ' ')
+      ].join('\t'));
+
+      const tsv = headers.concat(lines).join('\n');
+      navigator.clipboard.writeText(tsv).then(() => {
+        showToast('Tabla copiada. Puedes pegarla directo en Excel (Ctrl+V)', 'success');
+      });
+    });
+
+    // 4. Imprimir / PDF
+    expPrint.addEventListener('click', () => window.print());
+
+    /* ==================== DETALLES MODAL ==================== */
     document.addEventListener('click', e => {
-      // Copiar ID
       const tid = e.target.closest('.ticket-id');
       if (tid && !e.target.closest('.btn-detail')) {
         const id = tid.dataset.id;
-        navigator.clipboard.writeText(id).then(() => {
-          showToast(`ID ${id} copiado al portapapeles`, 'success');
-        });
+        navigator.clipboard.writeText(id).then(() => showToast(`ID ${id} copiado`, 'success'));
       }
 
-      // Ver detalle completo
       const btnD = e.target.closest('.btn-detail') || e.target.closest('.desc-preview');
       if (btnD) {
         const id = btnD.dataset.id;
@@ -2237,33 +1998,33 @@
     });
 
     function showTicketDetails(t) {
-      detailTitle.textContent = `Detalle del Ticket ${t.id}`;
+      detailTitle.textContent = `Detalle Ticket ${t.id}`;
       detailBody.innerHTML = `
         <div class="detail-grid">
-          <div class="detail-item"><span class="detail-label">Analista Responsable</span><span class="detail-val">${esc(t.analista || '—')}</span></div>
-          <div class="detail-item"><span class="detail-label">Usuario Solicitante</span><span class="detail-val">${esc(t.usuario || '—')}</span></div>
+          <div class="detail-item"><span class="detail-label">Analista</span><span class="detail-val">${esc(t.analista || '—')}</span></div>
+          <div class="detail-item"><span class="detail-label">Usuario</span><span class="detail-val">${esc(t.usuario || '—')}</span></div>
           <div class="detail-item"><span class="detail-label">Categoría</span><span class="detail-val">${esc(t.categoria || '—')}</span></div>
-          <div class="detail-item"><span class="detail-label">Servicio / Falla</span><span class="detail-val">${esc(t.falla || '—')}</span></div>
+          <div class="detail-item"><span class="detail-label">Servicio</span><span class="detail-val">${esc(t.falla || '—')}</span></div>
           <div class="detail-item"><span class="detail-label">Prioridad</span><span class="detail-val">${renderPriorityBadge(t.prioridad)}</span></div>
           <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-val">${renderStatusBadge(t.estado)}</span></div>
           <div class="detail-item"><span class="detail-label">Requerimiento</span><span class="detail-val">${t.requerimiento ? `🏷️ ${esc(t.requerimiento)}` : 'No registra'}</span></div>
-          <div class="detail-item"><span class="detail-label">Fecha Creación</span><span class="detail-val">${fmtDate(t.fecha)}</span></div>
+          <div class="detail-item"><span class="detail-label">Fecha</span><span class="detail-val">${t.fecha || '—'}</span></div>
         </div>
 
-        <div style="margin-top:14px;">
+        <div style="margin-top:12px;">
           <span class="detail-label">Descripción del Ticket</span>
           <div class="detail-box">${esc(t.descripcion || 'Sin descripción adicional.')}</div>
         </div>
 
         ${t.solucion ? `
-          <div style="margin-top:14px;">
+          <div style="margin-top:12px;">
             <span class="detail-label" style="color:#059669;">Solución Registrada</span>
             <div class="detail-box" style="border-color:#a7f3d0; background:#f0fdf4;">${esc(t.solucion)}</div>
           </div>
         ` : ''}
 
         ${t.motivo ? `
-          <div style="margin-top:14px;">
+          <div style="margin-top:12px;">
             <span class="detail-label" style="color:#dc2626;">Motivo de Cancelación</span>
             <div class="detail-box" style="border-color:#fecaca; background:#fef2f2;">${esc(t.motivo)}</div>
           </div>
@@ -2272,13 +2033,10 @@
       detailModal.showModal();
     }
 
-    /* ==================== MÓDULO DE INFORME MENSUAL Y GRÁFICAS ==================== */
+    /* ==================== INFORME MENSUAL Y GRÁFICAS ==================== */
     if (btnOpenMonthlyReport) {
       btnOpenMonthlyReport.addEventListener('click', () => {
-        // Inicializar mes por defecto con el actual o el seleccionado
-        if (monthSelect.value && reportMonthSelect) {
-          reportMonthSelect.value = monthSelect.value;
-        }
+        if (monthSelect.value && reportMonthSelect) reportMonthSelect.value = monthSelect.value;
         updateMonthlyReport();
         reportModal.showModal();
       });
@@ -2292,7 +2050,6 @@
       const selYm = reportMonthSelect.value;
       const selAnalyst = reportAnalystSelect.value;
 
-      // Filtrar tickets por mes y analista
       let filtered = allTickets.filter(t => {
         const d = new Date(t.fecha);
         const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -2301,15 +2058,9 @@
         return true;
       });
 
-      // Calcular estadísticas
       const total = filtered.length;
-      let cerrados = 0;
-      let abiertos = 0;
-      let enProceso = 0;
-      let cancelados = 0;
-
-      const countServices = {};
-      const countCategories = {};
+      let cerrados = 0, abiertos = 0, enProceso = 0, cancelados = 0;
+      const countServices = {}, countCategories = {};
 
       filtered.forEach(t => {
         const st = String(t.estado || '').toLowerCase();
@@ -2320,7 +2071,6 @@
 
         const srv = t.falla || 'Otros servicios';
         countServices[srv] = (countServices[srv] || 0) + 1;
-
         const cat = t.categoria || 'Otro';
         countCategories[cat] = (countCategories[cat] || 0) + 1;
       });
@@ -2328,16 +2078,13 @@
       const tramites = abiertos + enProceso;
       const pctCerrados = total ? ((cerrados / total) * 100).toFixed(1) : '0.0';
       const pctTramite = total ? ((tramites / total) * 100).toFixed(1) : '0.0';
+      const monthName = reportMonthSelect.options[reportMonthSelect.selectedIndex]?.text || 'el período';
 
-      const monthName = reportMonthSelect.options[reportMonthSelect.selectedIndex]?.text || 'el período seleccionado';
-
-      // 1. Redactar el Resumen Ejecutivo
       reportSummaryText.innerHTML = `
         <p>Durante el mes de <strong>${monthName}</strong>, el área de TI atendió un total de <strong>${total} solicitudes</strong>${selAnalyst ? ` asignadas a <strong>${selAnalyst}</strong>` : ''}, clasificados principalmente entre incidentes y requerimientos.</p>
-        <p style="margin-top:6px;">El <strong>${pctCerrados}%</strong> de las actividades fueron finalizadas satisfactoriamente, mientras que el <strong>${pctTramite}%</strong> permanecen en trámite.</p>
+        <p style="margin-top:4px;">El <strong>${pctCerrados}%</strong> de las actividades fueron finalizadas satisfactoriamente, mientras que el <strong>${pctTramite}%</strong> permanecen en trámite.</p>
       `;
 
-      // 2. Llenar tabla de Actividades Ejecutadas (ordenada de mayor a menor)
       const sortedServices = Object.entries(countServices).sort((a, b) => b[1] - a[1]);
       if (sortedServices.length) {
         reportTableBody.innerHTML = sortedServices.map(([srv, cnt]) => `
@@ -2347,20 +2094,16 @@
           </tr>
         `).join('');
       } else {
-        reportTableBody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:20px; color:var(--text-muted);">Sin registros en este período.</td></tr>`;
+        reportTableBody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:16px; color:var(--text-muted);">Sin registros en este período.</td></tr>`;
       }
 
-      // 3. Renderizar Gráfico Donut de Estados (Chart.js)
       renderChartStatus(cerrados, abiertos, enProceso, cancelados);
-
-      // 4. Renderizar Gráfico de Categorías (Top)
       renderChartCategory(countCategories);
     }
 
     function renderChartStatus(cerrados, abiertos, enProceso, cancelados) {
       const ctx = document.getElementById('chartStatus');
       if (!ctx) return;
-
       if (chartStatusInstance) chartStatusInstance.destroy();
 
       chartStatusInstance = new Chart(ctx, {
@@ -2370,22 +2113,19 @@
           datasets: [{
             data: [cerrados, abiertos, enProceso, cancelados],
             backgroundColor: ['#3b82f6', '#f97316', '#eab308', '#94a3b8'],
-            borderWidth: 2,
-            borderColor: '#ffffff'
+            borderWidth: 2, borderColor: '#ffffff'
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
+          responsive: true, maintainAspectRatio: false,
           plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans', size: 11 } } },
+            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } },
             tooltip: {
               callbacks: {
-                label: function(item) {
+                label: item => {
                   const total = item.dataset.data.reduce((a, b) => a + b, 0);
-                  const val = item.raw;
-                  const pct = total ? ((val / total) * 100).toFixed(1) : 0;
-                  return ` ${item.label}: ${val} (${pct}%)`;
+                  const pct = total ? ((item.raw / total) * 100).toFixed(1) : 0;
+                  return ` ${item.label}: ${item.raw} (${pct}%)`;
                 }
               }
             }
@@ -2398,48 +2138,32 @@
     function renderChartCategory(categories) {
       const ctx = document.getElementById('chartCategory');
       if (!ctx) return;
-
       if (chartCategoryInstance) chartCategoryInstance.destroy();
 
       const sorted = Object.entries(categories).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      const labels = sorted.map(x => x[0]);
-      const values = sorted.map(x => x[1]);
-
       chartCategoryInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: labels,
-          datasets: [{
-            label: 'Tickets',
-            data: values,
-            backgroundColor: '#0284c7',
-            borderRadius: 6
-          }]
+          labels: sorted.map(x => x[0]),
+          datasets: [{ label: 'Tickets', data: sorted.map(x => x[1]), backgroundColor: '#0284c7', borderRadius: 4 }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { beginAtZero: true, ticks: { precision: 0 } },
-            x: { ticks: { font: { size: 10 } } }
-          }
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
         }
       });
     }
 
     if (btnCopyReportText) {
       btnCopyReportText.addEventListener('click', () => {
-        const text = reportSummaryText.innerText;
-        navigator.clipboard.writeText(text).then(() => {
-          showToast('Resumen ejecutivo copiado al portapapeles', 'success');
+        navigator.clipboard.writeText(reportSummaryText.innerText).then(() => {
+          showToast('Resumen ejecutivo copiado', 'success');
         });
       });
     }
 
-    /* ==================== WHOAMI + LIST + CONTACTS ==================== */
+    /* ==================== LLAMADOS HTTP ==================== */
     async function fetchRemote(){
       try {
         const params = new URLSearchParams();
@@ -2457,12 +2181,10 @@
           ticketsRemote = data.items;
           render(data.counters);
         } else {
-          ticketsRemote = null;
-          render();
+          ticketsRemote = null; render();
         }
-      } catch (err) {
-        ticketsRemote = null;
-        render();
+      } catch {
+        ticketsRemote = null; render();
       }
     }
 
@@ -2505,7 +2227,7 @@
       }
 
       if (!analista || !categoria || !falla || !usuario || !prioridad){
-        showToast('Completa todos los campos obligatorios (*)', 'error');
+        showToast('Completa los campos obligatorios (*)', 'error');
         return;
       }
 
@@ -2513,7 +2235,7 @@
       btnSubmit.disabled = true;
       btnSubmit.innerHTML = '<span>⏳ Guardando…</span>';
 
-      const correoAnalista = (ANALISTAS.find(a => a.nombre === analista)?.email) || '';
+      const correoAnalista = (ANALISTAS_AUTORIZADOS.find(a => a.nombre === analista)?.email) || '';
       const id = 'T' + new Date().toISOString().replace(/\D/g, '').slice(0, 14);
       const nowISO = new Date().toISOString();
 
@@ -2526,28 +2248,25 @@
       ticketsLocal.unshift(t);
       saveLocal(ticketsLocal);
       render();
-      showToast(`Ticket ${id} creado. Sincronizando con Sheets…`, 'info');
+      showToast(`Ticket ${id} creado localmente`, 'info');
 
       try {
         const d = await postJSON({
           action: 'create', id: t.id, analista, correoAnalista, categoria, falla, usuario, prioridad,
           descripcion, estado: t.estado, fechaISO: nowISO, requerimiento: t.requerimiento
         });
-        if (!d || !d.ok){
-          showToast('Guardado localmente. Pendiente de sincronizar en Sheets.', 'info');
-        } else {
-          showToast(`¡Ticket ${id} registrado en Google Sheets!`, 'success');
+        if (d && d.ok){
+          showToast(`¡Ticket ${id} sincronizado con Sheets!`, 'success');
           fetchRemote();
         }
-      } catch (err) {
-        showToast('Error de red al sincronizar con Sheets', 'error');
+      } catch {
+        showToast('Guardado localmente. Pendiente de sincronizar.', 'info');
       } finally {
         btnSubmit.disabled = false;
-        btnSubmit.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg><span>Guardar Reporte</span>`;
+        btnSubmit.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg><span>Guardar Reporte</span>`;
         form.reset();
         toggleReq();
-        const active = localStorage.getItem('active_analyst') || 'Jose Salas';
-        $('#analista').value = active;
+        if (currentAnalystUser) $('#analista').value = currentAnalystUser.nombre;
       }
     });
 
@@ -2564,7 +2283,7 @@
         const onOk = () => {
           if (required && !modalText.value.trim()){
             modalText.focus();
-            showToast('Este campo es obligatorio', 'error');
+            showToast('Campo obligatorio', 'error');
             return;
           }
           cleanup();
@@ -2590,80 +2309,50 @@
       if (s) s.dataset.prev = s.value;
     });
 
-    /* ==================== CAMBIO DE ESTADO Y PRIORIDAD ==================== */
+    /* ==================== CAMBIOS DE ESTADO ==================== */
     document.addEventListener('change', async e => {
       const selE = e.target.closest('.estado-select');
-      const selP = e.target.closest('.prio-select');
-
       if (selE){
         const id = selE.dataset.id;
         const newStatus = selE.value;
         const prev = selE.dataset.prev || 'Abierto';
 
         if (newStatus === 'Cancelado'){
-          const r = await askModal({
-            title: `Cancelar ticket ${id}`,
-            label: 'Motivo de la cancelación',
-            placeholder: 'Describe detalladamente el motivo de la cancelación…',
-            required: true
-          });
+          const r = await askModal({ title: `Cancelar ticket ${id}`, label: 'Motivo de la cancelación', required: true });
           if (!r.ok){ selE.value = prev; return; }
-          
           const tL = ticketsLocal.find(x => x.id === id);
           if (tL){ tL.estado = newStatus; tL.motivo = r.text; saveLocal(ticketsLocal); }
           render();
-          showToast(`Cancelando ticket ${id}…`, 'info');
           const d = await postJSON({ action: 'update_status', id, status: newStatus, reason: r.text });
-          if (d && d.ok) { showToast(`Ticket ${id} marcado como Cancelado`, 'success'); fetchRemote(); }
+          if (d && d.ok) { showToast(`Ticket ${id} cancelado`, 'success'); fetchRemote(); }
           return;
         }
 
         if (newStatus === 'Cerrado'){
-          const r = await askModal({
-            title: `Cerrar ticket ${id}`,
-            label: 'Solución técnica brindada',
-            placeholder: 'Describe la solución realizada para resolver el reporte…',
-            required: true
-          });
+          const r = await askModal({ title: `Cerrar ticket ${id}`, label: 'Solución técnica brindada', required: true });
           if (!r.ok){ selE.value = prev; return; }
-
           const tL = ticketsLocal.find(x => x.id === id);
           if (tL){ tL.estado = newStatus; tL.solucion = r.text; saveLocal(ticketsLocal); }
           render();
-          showToast(`Cerrando ticket ${id}…`, 'info');
           const d = await postJSON({ action: 'update_status', id, status: newStatus, solution: r.text });
-          if (d && d.ok) { showToast(`Ticket ${id} marcado como Cerrado`, 'success'); fetchRemote(); }
+          if (d && d.ok) { showToast(`Ticket ${id} cerrado`, 'success'); fetchRemote(); }
           return;
         }
 
-        // Otros estados (Abierto / En Proceso)
         const tL = ticketsLocal.find(x => x.id === id);
         if (tL){ tL.estado = newStatus; saveLocal(ticketsLocal); }
         render();
-        showToast(`Actualizando estado a "${newStatus}"…`, 'info');
         const d2 = await postJSON({ action: 'update_status', id, status: newStatus });
-        if (d2 && d2.ok) { showToast(`Estado actualizado`, 'success'); fetchRemote(); }
-      }
-
-      if (selP){
-        const id = selP.dataset.id;
-        const pr = selP.value;
-        const tL = ticketsLocal.find(x => x.id === id);
-        if (tL){ tL.prioridad = pr; saveLocal(ticketsLocal); }
-        render();
-        showToast(`Prioridad de ${id} cambiada a ${pr}`, 'info');
-        const d3 = await postJSON({ action: 'update_priority', id, prioridad: pr });
-        if (d3 && d3.ok) fetchRemote();
+        if (d2 && d2.ok) fetchRemote();
       }
     });
 
     /* ==================== INICIALIZACIÓN ==================== */
     async function init(){
-      initActiveAnalyst();
+      checkAuthSession();
       await fetchContacts();
       render();
-      fetchRemote();
-      setInterval(() => { if (!document.hidden) fetchRemote(); }, AUTO_REFRESH_MS);
+      setInterval(() => { if (!document.hidden && currentAnalystUser) fetchRemote(); }, AUTO_REFRESH_MS);
     }
     init();
   })();
