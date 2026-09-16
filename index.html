@@ -448,30 +448,44 @@
     }
     .radio-pill-label input { display: none; }
 
+    /* Autocomplete */
     .ac-wrapper { position: relative; }
     .ac-dropdown {
       position: absolute;
       top: calc(100% + 4px);
       left: 0; right: 0;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      background: #ffffff !important;
+      border: 1.5px solid var(--primary);
       border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
-      max-height: 200px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+      max-height: 240px;
       overflow-y: auto;
-      z-index: 50;
+      z-index: 999999 !important;
       padding: 4px;
       list-style: none;
+      display: block;
     }
-    .ac-dropdown[hidden] { display: none; }
+    body[data-theme="dark"] .ac-dropdown {
+      background: #1e293b !important;
+      border-color: #3b82f6;
+    }
+    .ac-dropdown[hidden] { display: none !important; }
     .ac-item {
-      padding: 7px 10px;
-      font-size: 0.8rem;
-      font-weight: 500;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #0f172a;
       border-radius: var(--radius-sm);
       cursor: pointer;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.15s ease;
     }
-    .ac-item:hover { background: var(--primary-light); color: var(--primary); }
+    body[data-theme="dark"] .ac-item { color: #f8fafc; }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item[aria-selected="true"] {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
 
     .snippets-accordion {
       border: 1px dashed var(--border-color);
@@ -977,7 +991,6 @@
       <div style="width:100%; text-align:left;">
         <label for="authPinInput" style="margin-bottom:6px;">PIN / Clave de Acceso:</label>
         <input type="password" id="authPinInput" class="form-control" placeholder="Ingresa clave de acceso" style="padding:10px;">
-        
       </div>
 
       <button id="btnAuthLogin" class="btn btn-primary" style="width:100%; padding:11px; font-size:0.9rem;">
@@ -1125,10 +1138,10 @@
                 </select>
               </div>
 
-              <!-- Usuario Reporta -->
+              <!-- Usuario Reporta (Búsqueda en Base de Datos de Personal - Columna B) -->
               <div class="form-group ac-wrapper">
                 <label for="usuario">Usuario que reporta <span class="required-star">*</span></label>
-                <input id="usuario" class="form-control" placeholder="Nombre o apellido…" required autocomplete="off" />
+                <input id="usuario" class="form-control" placeholder="Escribe nombre o apellido…" required autocomplete="off" />
                 <ul id="acList" class="ac-dropdown" hidden></ul>
                 <span class="input-hint">Elige entre las sugerencias</span>
               </div>
@@ -1285,7 +1298,7 @@
               <div class="filter-item">
                 <span class="filter-label">Mes:</span>
                 <select id="monthSelect" class="filter-select">
-                  <option value="">Todos</option>
+                  <option value="">Todos los meses</option>
                 </select>
               </div>
             </div>
@@ -1298,7 +1311,7 @@
             </div>
           </div>
 
-          <!-- TABLA COMPACTA (AJUSTE PERFECTO EN 1 SOLA VISTA) -->
+          <!-- TABLA COMPACTA -->
           <div class="table-container">
             <table class="data-table">
               <thead>
@@ -1381,7 +1394,9 @@
       <div class="report-filter-bar">
         <div style="display:flex; align-items:center; gap:6px;">
           <span style="font-weight:700; font-size:0.8rem;">Mes:</span>
-          <select id="reportMonthSelect" class="form-control" style="width:auto; padding:5px 10px; font-size:0.8rem;"></select>
+          <select id="reportMonthSelect" class="form-control" style="width:auto; padding:5px 10px; font-size:0.8rem;">
+            <option value="">Todos los meses</option>
+          </select>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           <span style="font-weight:700; font-size:0.8rem;">Analista:</span>
@@ -1440,11 +1455,12 @@
     'use strict';
 
     /* ==================== CONFIGURACIÓN & ANALISTAS AUTORIZADOS ==================== */
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzoB1kGnRF_XyVZnMyVlUAW507-U94LBZN_bboDOfZYp2p98a1KkeSePvhrTjslYIwhZw/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxDYuz9WHDkK6zXh__gyWN9zkt2tSoFtINKfxTS1MUaUxbGprCeZdMT2f6WrKyhEn4neg/exec';
+    const DIRECTORY_SPREADSHEET_ID = '1JCORZBlWL0DPs9DuZQsvd1VFuMy1ZVBT8RgM1S_eNZ0';
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE = 25;
 
-    // Lista de analistas autorizados y credenciales de acceso (puedes cambiar los PINs aquí)
+    // Lista de analistas autorizados y credenciales de acceso
     const ANALISTAS_AUTORIZADOS = [
       { nombre:'Jose Salas',        email:'jsalas@sedic.com.co',       init:'JS', pin:'1234' },
       { nombre:'Sebastián Cataño',  email:'scatano@sedic.com.co',     init:'SC', pin:'1234' },
@@ -1452,11 +1468,61 @@
       { nombre:'Pablo Calle',       email:'pablocalle@ingetec.com.co', init:'PC', pin:'1234' }
     ];
 
+    // Directorio de Personal Interventoría Ituango (Columna B de la hoja ACTIVOS)
     let USUARIOS = [
-      'Marcela Pareja', 'Jhon Madrid', 'Juan Carlos Betancur', 'Heidy Zambrano',
-      'Andrés Gómez', 'Carlos Ramírez', 'Lina Areiza', 'Diana Pérez',
-      'Jose Salas', 'Sebastián Cataño', 'Sebastián Posada', 'Pablo Calle'
+      'Fragozo Ibarra Kleyver Andres', 'Hoyos Villalba Jose David', 'Paniagua Otalvaro Leonardo Francisco',
+      'Arbelaez Fernandez Cristian Camilo', 'Acosta Rojas Susan Daniela', 'Cossio Sepulveda Juan Diego',
+      'Valencia Guerra Ricardo Wilson', 'Hidalgo Mendez Henry de Jesús', 'Montoya Gonzalez Yeferson Davison',
+      'Padilla Caballero Yormi Alexander', 'Blandon Puerta Cristian Camilo', 'Naranjo Jaramillo Nelson Enrique',
+      'Buelvas Arango Julio Cesar', 'Guerrero Oropeza Nestor Eduardo', 'Espinosa Cardenal Andres Mauricio',
+      'Durango Muñoz Carlos Emerson', 'Peña Guerrero Luis Alberto', 'Vargas Méndez Daniel Eduardo',
+      'Franco Franco Carlos Alberto', 'Sanchez Giraldo Alexander', 'Arango Betancur Yesid Orlando',
+      'Maria Camila Gomez', 'Maria Victoria Lopez', 'Maria Elena Restrepo', 'Maria Jose Perez',
+      'Marcela Pareja', 'Jhon Madrid', 'Juan Carlos Betancur', 'Jose Salas', 'Sebastián Cataño', 'Sebastián Posada', 'Pablo Calle'
     ];
+
+    /* ==================== PARSER UNIVERSAL DE FECHAS ==================== */
+    function parseTicketDate(val) {
+      if (!val) return null;
+      if (val instanceof Date && !isNaN(val.getTime())) return val;
+      const s = String(val).trim();
+      
+      // Formato ISO: 2026-09-14T... o 2026-09-14
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        const d = new Date(s);
+        if (!isNaN(d.getTime())) return d;
+      }
+      
+      // Formato Latinoamericano: dd/MM/yyyy HH:mm o dd/MM/yy o dd-MM-yyyy
+      const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+      if (m) {
+        let day = parseInt(m[1], 10);
+        let month = parseInt(m[2], 10) - 1;
+        let year = parseInt(m[3], 10);
+        if (year < 100) year += 2000;
+        let hr = m[4] ? parseInt(m[4], 10) : 0;
+        let min = m[5] ? parseInt(m[5], 10) : 0;
+        let sec = m[6] ? parseInt(m[6], 10) : 0;
+        const d = new Date(year, month, day, hr, min, sec);
+        if (!isNaN(d.getTime())) return d;
+      }
+      
+      const dFallback = new Date(s);
+      return !isNaN(dFallback.getTime()) ? dFallback : null;
+    }
+
+    function extractYm(val) {
+      const d = parseTicketDate(val);
+      if (d) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      }
+      const s = String(val || '');
+      const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (m) return `${m[3]}-${String(m[2]).padStart(2, '0')}`;
+      const m2 = s.match(/(\d{4})[\-\/](\d{1,2})/);
+      if (m2) return `${m2[1]}-${String(m2[2]).padStart(2, '0')}`;
+      return '';
+    }
 
     /* ==================== SELECTORES DOM ==================== */
     const $ = s => document.querySelector(s);
@@ -1542,7 +1608,6 @@
       whoName.textContent = analyst.nombre;
       whoAvatar.textContent = analyst.init;
       
-      // Ajustar select del formulario
       const formAnalista = $('#analista');
       if (formAnalista) formAnalista.value = analyst.nombre;
       
@@ -1602,31 +1667,86 @@
       }
     })();
 
-    /* ==================== AUTOCOMPLETE USUARIOS ==================== */
+    /* ==================== AUTOCOMPLETE USUARIOS (COLUMNA B) ==================== */
     const inputUsuario = $('#usuario'), acList = $('#acList');
     const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    
     function filtraUsuarios(q){
       const n = norm(q);
-      if (!n) return [];
-      return USUARIOS.filter(u => norm(u).includes(n)).slice(0, 8);
+      if (!n || n.length < 1) return [];
+      
+      const terms = n.split(/\s+/).filter(Boolean);
+      return USUARIOS.filter(u => {
+        const nu = norm(u);
+        return terms.every(term => nu.includes(term));
+      }).slice(0, 15);
     }
+
     function renderAcList(items){
-      if (!items.length) { acList.hidden = true; acList.innerHTML = ''; return; }
-      acList.innerHTML = items.map((t, i) => `<li class="ac-item" ${i === 0 ? 'aria-selected="true"' : ''}>👤 ${t}</li>`).join('');
+      if (!items || !items.length) { 
+        acList.hidden = true; 
+        acList.innerHTML = ''; 
+        return; 
+      }
+      acList.innerHTML = items.map((t, i) => `
+        <li class="ac-item" ${i === 0 ? 'aria-selected="true"' : ''} data-name="${esc(t)}">
+          👤 ${esc(t)}
+        </li>
+      `).join('');
       acList.hidden = false;
     }
+
     if (inputUsuario) {
       inputUsuario.addEventListener('input', () => renderAcList(filtraUsuarios(inputUsuario.value)));
-      inputUsuario.addEventListener('focus', () => renderAcList(filtraUsuarios(inputUsuario.value)));
+      inputUsuario.addEventListener('focus', () => {
+        if (inputUsuario.value.trim().length >= 1) {
+          renderAcList(filtraUsuarios(inputUsuario.value));
+        }
+      });
       document.addEventListener('click', e => {
         const item = e.target.closest('#acList li');
         if (item) {
-          inputUsuario.value = item.textContent.replace('👤 ', '').trim();
+          inputUsuario.value = item.getAttribute('data-name') || item.textContent.replace('👤', '').trim();
           acList.hidden = true;
+          showToast(`Usuario seleccionado: ${inputUsuario.value}`, 'info');
         } else if (!e.target.closest('.ac-wrapper')) {
           acList.hidden = true;
         }
       });
+    }
+
+    /* Carga de la lista de personal desde Google Sheets (Hoja ACTIVOS - Columna B) */
+    async function fetchContacts(){
+      // 1. Intento vía Google Visualization API directo a la hoja ACTIVOS
+      try {
+        const gvizUrl = `https://docs.google.com/spreadsheets/d/${DIRECTORY_SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=ACTIVOS`;
+        const res = await fetch(gvizUrl);
+        const txt = await res.text();
+        const jsonStr = txt.replace(/^[/*\s]*google\.visualization\.Query\.setResponse\(/, '').replace(/\);?[/*\s]*$/, '');
+        const data = JSON.parse(jsonStr);
+        if (data && data.table && Array.isArray(data.table.rows)) {
+          const names = [];
+          data.table.rows.forEach(r => {
+            const val = r.c && r.c[1] ? (r.c[1].v || r.c[1].f) : null;
+            if (val && String(val).trim().length > 2 && !String(val).toLowerCase().includes('nombre')) {
+              names.push(String(val).trim());
+            }
+          });
+          if (names.length > 0) {
+            USUARIOS = Array.from(new Set([...names, ...USUARIOS]));
+            return;
+          }
+        }
+      } catch(e){}
+
+      // 2. Intento vía Apps Script
+      try {
+        const res2 = await fetch(`${WEB_APP_URL}?action=contacts`);
+        const data2 = await res2.json();
+        if (data2 && data2.ok && Array.isArray(data2.contacts) && data2.contacts.length) {
+          USUARIOS = Array.from(new Set([...data2.contacts, ...USUARIOS]));
+        }
+      } catch(e){}
     }
 
     /* Plantillas */
@@ -1652,22 +1772,34 @@
     if (reqSi) reqSi.addEventListener('change', toggleReq);
     if (reqNo) reqNo.addEventListener('change', toggleReq);
 
-    /* Meses */
-    (function fillMonths(){
-      const now = new Date();
-      const items = ['<option value="">Todos</option>'];
-      const reportItems = [];
-      for (let i = 0; i < 18; i++){
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        const label = d.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+    /* Generación dinámica de meses */
+    function populateMonthsOptions(tickets) {
+      const ymSet = new Set();
+      tickets.forEach(t => {
+        const ym = extractYm(t.fecha);
+        if (ym && ym.length === 7) ymSet.add(ym);
+      });
+
+      const sortedYm = Array.from(ymSet).sort().reverse();
+      const optionsHtml = ['<option value="">Todos los meses</option>'];
+
+      sortedYm.forEach(ym => {
+        const [y, m] = ym.split('-');
+        const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+        const label = dateObj.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
         const text = label.charAt(0).toUpperCase() + label.slice(1);
-        items.push(`<option value="${ym}">${text}</option>`);
-        reportItems.push(`<option value="${ym}">${text}</option>`);
+        optionsHtml.push(`<option value="${ym}">${text}</option>`);
+      });
+
+      if (sortedYm.length > 0) {
+        const prevMonth = monthSelect.value;
+        const prevRepMonth = reportMonthSelect.value;
+        monthSelect.innerHTML = optionsHtml.join('');
+        reportMonthSelect.innerHTML = optionsHtml.join('');
+        if (prevMonth) monthSelect.value = prevMonth;
+        if (prevRepMonth) reportMonthSelect.value = prevRepMonth;
       }
-      if (monthSelect) monthSelect.innerHTML = items.join('');
-      if (reportMonthSelect) reportMonthSelect.innerHTML = reportItems.join('');
-    })();
+    }
 
     /* Filtros reactivos */
     if (viewSelect) {
@@ -1740,8 +1872,8 @@
 
     function fmtDateCompact(iso) {
       if (!iso) return '—';
-      const d = (iso instanceof Date) ? iso : new Date(iso);
-      if (isNaN(d)) return String(iso).slice(0, 10);
+      const d = parseTicketDate(iso);
+      if (!d) return String(iso).slice(0, 10);
       const dia = String(d.getDate()).padStart(2, '0');
       const mes = String(d.getMonth() + 1).padStart(2, '0');
       const hora = String(d.getHours()).padStart(2, '0');
@@ -1788,11 +1920,7 @@
       }
 
       if (monthSelect.value) {
-        rows = rows.filter(x => {
-          const d = new Date(x.fecha);
-          const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-          return ym === monthSelect.value;
-        });
+        rows = rows.filter(x => extractYm(x.fecha) === monthSelect.value);
       }
       return rows;
     }
@@ -1813,15 +1941,22 @@
           norm(`${r.id} ${r.categoria} ${r.falla} ${r.usuario} ${r.descripcion || ''} ${r.requerimiento || ''}`).includes(n)
         );
       }
-      rows.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      rows.sort((a, b) => {
+        const da = parseTicketDate(a.fecha) || new Date(0);
+        const db = parseTicketDate(b.fecha) || new Date(0);
+        return db - da;
+      });
       return rows;
     }
 
     /* ==================== RENDER DE TABLA COMPACTA ==================== */
     function render(countersFromAPI){
       const allRows = currentFilteredRows();
-      if (countersFromAPI && lastSource === 'Google Sheets') setCounters(countersFromAPI);
-      else setCounters(computeCounters(currentBaseRows()));
+      if (countersFromAPI && lastSource === 'Google Sheets' && !monthSelect.value && !currentFilterKpi) {
+        setCounters(countersFromAPI);
+      } else {
+        setCounters(computeCounters(currentBaseRows()));
+      }
 
       syncBadge.innerHTML = `🟢 ${lastSource}`;
       syncBadge.style.background = lastSource === 'Google Sheets' ? '#ecfdf5' : '#fef3c7';
@@ -2036,7 +2171,9 @@
     /* ==================== INFORME MENSUAL Y GRÁFICAS ==================== */
     if (btnOpenMonthlyReport) {
       btnOpenMonthlyReport.addEventListener('click', () => {
-        if (monthSelect.value && reportMonthSelect) reportMonthSelect.value = monthSelect.value;
+        if (monthSelect.value && reportMonthSelect) {
+          reportMonthSelect.value = monthSelect.value;
+        }
         updateMonthlyReport();
         reportModal.showModal();
       });
@@ -2047,14 +2184,13 @@
 
     function updateMonthlyReport() {
       const allTickets = Array.isArray(ticketsRemote) ? ticketsRemote : ticketsLocal;
-      const selYm = reportMonthSelect.value;
-      const selAnalyst = reportAnalystSelect.value;
+      const selYm = reportMonthSelect ? reportMonthSelect.value : '';
+      const selAnalyst = reportAnalystSelect ? reportAnalystSelect.value : '';
 
       let filtered = allTickets.filter(t => {
-        const d = new Date(t.fecha);
-        const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const ym = extractYm(t.fecha);
         if (selYm && ym !== selYm) return false;
-        if (selAnalyst && String(t.analista) !== selAnalyst) return false;
+        if (selAnalyst && String(t.analista).trim() !== selAnalyst.trim()) return false;
         return true;
       });
 
@@ -2078,10 +2214,12 @@
       const tramites = abiertos + enProceso;
       const pctCerrados = total ? ((cerrados / total) * 100).toFixed(1) : '0.0';
       const pctTramite = total ? ((tramites / total) * 100).toFixed(1) : '0.0';
-      const monthName = reportMonthSelect.options[reportMonthSelect.selectedIndex]?.text || 'el período';
+      const monthName = (reportMonthSelect && reportMonthSelect.selectedIndex >= 0) 
+        ? reportMonthSelect.options[reportMonthSelect.selectedIndex]?.text 
+        : 'el período seleccionado';
 
       reportSummaryText.innerHTML = `
-        <p>Durante el mes de <strong>${monthName}</strong>, el área de TI atendió un total de <strong>${total} solicitudes</strong>${selAnalyst ? ` asignadas a <strong>${selAnalyst}</strong>` : ''}, clasificados principalmente entre incidentes y requerimientos.</p>
+        <p>Durante <strong>${monthName}</strong>, el área de TI atendió un total de <strong>${total} solicitudes</strong>${selAnalyst ? ` asignadas a <strong>${selAnalyst}</strong>` : ''}, clasificados principalmente entre incidentes y requerimientos.</p>
         <p style="margin-top:4px;">El <strong>${pctCerrados}%</strong> de las actividades fueron finalizadas satisfactoriamente, mientras que el <strong>${pctTramite}%</strong> permanecen en trámite.</p>
       `;
 
@@ -2179,6 +2317,7 @@
         const data = await res.json();
         if (data && data.ok && Array.isArray(data.items)){
           ticketsRemote = data.items;
+          populateMonthsOptions(ticketsRemote);
           render(data.counters);
         } else {
           ticketsRemote = null; render();
@@ -2186,17 +2325,6 @@
       } catch {
         ticketsRemote = null; render();
       }
-    }
-
-    async function fetchContacts(){
-      try {
-        const params = new URLSearchParams({ action:'contacts' });
-        const res = await fetch(WEB_APP_URL + '?' + params.toString());
-        const data = await res.json();
-        if (data && data.ok && Array.isArray(data.contacts) && data.contacts.length){
-          USUARIOS = data.contacts;
-        }
-      } catch(e) {}
     }
 
     async function postJSON(payload){
@@ -2350,7 +2478,8 @@
     /* ==================== INICIALIZACIÓN ==================== */
     async function init(){
       checkAuthSession();
-      await fetchPersonnelDirectory(); // <-- Carga todos los empleados de la base de datos
+      await fetchContacts();
+      populateMonthsOptions(ticketsLocal);
       render();
       setInterval(() => { if (!document.hidden && currentAnalystUser) fetchRemote(); }, AUTO_REFRESH_MS);
     }
