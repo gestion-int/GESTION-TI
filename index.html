@@ -277,18 +277,24 @@
     }
 
     /* ==========================================================================
-       04. GRID PRINCIPAL (FORMULARIO + TABLA)
+       04. GRID PRINCIPAL (FORMULARIO + TABLA COMPACTA)
        ========================================================================== */
     .main-grid {
       display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 14px;
+      grid-template-columns: 1fr;
+      gap: 16px;
       align-items: start;
     }
 
-    @media (max-width: 1100px) {
+    @media (min-width: 960px) {
       .main-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 430px minmax(0, 1fr);
+      }
+    }
+
+    @media (min-width: 1440px) {
+      .main-grid {
+        grid-template-columns: 460px minmax(0, 1fr);
       }
     }
 
@@ -1361,7 +1367,7 @@
           <div class="table-toolbar">
             <div class="filters-cluster">
               <div class="filter-item">
-                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Vista:</span>
+                <span class="filter-label">Vista:</span>
                 <select id="viewSelect" class="filter-select">
                   <option value="todos">Todos los reportes</option>
                   <option value="mis">Mis reportes</option>
@@ -1369,7 +1375,7 @@
               </div>
 
               <div class="filter-item">
-                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Analista:</span>
+                <span class="filter-label">Analista:</span>
                 <select id="analystSelect" class="filter-select">
                   <option value="">Todos los analistas</option>
                   <option>Jose Salas</option>
@@ -1380,7 +1386,7 @@
               </div>
 
               <div class="filter-item">
-                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Estado:</span>
+                <span class="filter-label">Estado:</span>
                 <select id="statusSelect" class="filter-select">
                   <option value="">Todos los estados</option>
                   <option value="pendientes">Pendientes (Abiertos + En Proceso)</option>
@@ -1392,10 +1398,11 @@
               </div>
 
               <div class="filter-item">
-                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Mes:</span>
+                <span class="filter-label">Mes:</span>
                 <select id="monthSelect" class="filter-select">
                   <option value="">Todos los meses</option>
                 </select>
+                <input type="month" id="monthPickerInput" class="filter-select" title="Seleccionar mes y año específico del calendario" style="padding:3px 6px;">
               </div>
             </div>
 
@@ -1489,10 +1496,14 @@
     <div class="modal-body">
       <div class="report-filter-bar">
         <div style="display:flex; align-items:center; gap:6px;">
-          <span style="font-weight:700; font-size:0.8rem;">Mes:</span>
+          <span style="font-weight:700; font-size:0.8rem;">Mes / Período:</span>
           <select id="reportMonthSelect" class="form-control" style="width:auto; padding:5px 10px; font-size:0.8rem;">
             <option value="">Todos los meses</option>
           </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-weight:700; font-size:0.8rem;">📅 Calendario:</span>
+          <input type="month" id="reportMonthPicker" class="form-control" style="width:auto; padding:4px 8px; font-size:0.8rem;" title="Escoger mes y año con calendario">
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           <span style="font-weight:700; font-size:0.8rem;">Analista:</span>
@@ -1551,7 +1562,7 @@
     'use strict';
 
     /* ==================== CONFIGURACIÓN & ANALISTAS AUTORIZADOS ==================== */
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx14TXqJeqhSxe-Pi9FUXqnZdhQiuMAS5hbgFSdcWhzNvtB9qDnx049tsGrKAd2BSlBBg/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyU4W5REOKNRhLKp1l8nnodaTzAE7WF3ty2eoJ_W6Qclx021KViQdgzDnvHkdRCpoNqCw/exec';
     const DIRECTORY_SPREADSHEET_ID = '1JCORZBlWL0DPs9DuZQsvd1VFuMy1ZVBT8RgM1S_eNZ0';
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE = 25;
@@ -1872,47 +1883,16 @@
       });
     }
 
-    /* Carga de la lista de personal desde Google Sheets (Hoja ACTIVOS - Columna B) */
+    /* Carga de la lista de personal desde Google Sheets en segundo plano */
     async function fetchContacts(){
-      // 1. Intento vía Google Visualization API directo a la hoja ACTIVOS
       try {
-        const sheetNames = ['ACTIVOS', 'Sheet1', 'Hoja 1', 'PERSONAL'];
-        for (const sheet of sheetNames) {
-          try {
-            const gvizUrl = `https://docs.google.com/spreadsheets/d/${DIRECTORY_SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheet)}`;
-            const res = await fetch(gvizUrl);
-            const txt = await res.text();
-            const jsonStr = txt.replace(/^[/*\s]*google\.visualization\.Query\.setResponse\(/, '').replace(/\);?[/*\s]*$/, '');
-            const data = JSON.parse(jsonStr);
-            if (data && data.table && Array.isArray(data.table.rows) && data.table.rows.length > 0) {
-              const names = [];
-              data.table.rows.forEach(r => {
-                if (r.c) {
-                  const valB = r.c[1] ? (r.c[1].v || r.c[1].f) : null;
-                  if (valB && String(valB).trim().length > 2 && !String(valB).toLowerCase().includes('nombre') && !String(valB).toLowerCase().includes('apellidos')) {
-                    names.push(String(valB).trim());
-                  }
-                  const valA = r.c[0] ? (r.c[0].v || r.c[0].f) : null;
-                  if (valA && String(valA).trim().length > 2 && !String(valA).toLowerCase().includes('nombre') && isNaN(valA)) {
-                    names.push(String(valA).trim());
-                  }
-                }
-              });
-              if (names.length > 0) {
-                USUARIOS = Array.from(new Set([...USUARIOS, ...names]));
-                break;
-              }
-            }
-          } catch(e){}
-        }
-      } catch(e){}
-
-      // 2. Intento vía Apps Script
-      try {
-        const res2 = await fetch(`${WEB_APP_URL}?action=contacts`);
-        const data2 = await res2.json();
-        if (data2 && data2.ok && Array.isArray(data2.contacts) && data2.contacts.length) {
-          USUARIOS = Array.from(new Set([...USUARIOS, ...data2.contacts]));
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(`${WEB_APP_URL}?action=contacts`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (data && data.ok && Array.isArray(data.contacts) && data.contacts.length) {
+          USUARIOS = Array.from(new Set([...USUARIOS, ...data.contacts]));
         }
       } catch(e){}
     }
@@ -1940,28 +1920,19 @@
     if (reqSi) reqSi.addEventListener('change', toggleReq);
     if (reqNo) reqNo.addEventListener('change', toggleReq);
 
-    /* Generación dinámica y completa de meses */
+    /* Generación limpia de meses a partir de los datos registrados */
     function populateMonthsOptions(tickets) {
-      const ymSet = new Set();
+      const ymCounts = {};
+      const all = Array.isArray(tickets) ? tickets : [];
       
-      // 1. Años 2024, 2025, 2026, 2027 (todos los meses disponibles para informe y filtro)
-      const curYear = new Date().getFullYear();
-      for (let y = Math.max(curYear + 1, 2026); y >= 2024; y--) {
-        for (let m = 12; m >= 1; m--) {
-          const ym = `${y}-${String(m).padStart(2, '0')}`;
-          ymSet.add(ym);
+      all.forEach(t => {
+        const ym = extractYm(t.fecha);
+        if (ym && ym.length === 7) {
+          ymCounts[ym] = (ymCounts[ym] || 0) + 1;
         }
-      }
+      });
 
-      // 2. Meses adicionales encontrados en los registros
-      if (Array.isArray(tickets)) {
-        tickets.forEach(t => {
-          const ym = extractYm(t.fecha);
-          if (ym && ym.length === 7) ymSet.add(ym);
-        });
-      }
-
-      const sortedYm = Array.from(ymSet).sort().reverse();
+      const sortedYm = Object.keys(ymCounts).sort().reverse();
       const optionsHtml = ['<option value="">Todos los meses</option>'];
 
       sortedYm.forEach(ym => {
@@ -1969,7 +1940,7 @@
         const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
         const label = dateObj.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
         const text = label.charAt(0).toUpperCase() + label.slice(1);
-        optionsHtml.push(`<option value="${ym}">${text}</option>`);
+        optionsHtml.push(`<option value="${ym}">${text} (${ymCounts[ym]})</option>`);
       });
 
       const prevMonth = monthSelect ? monthSelect.value : '';
@@ -1977,12 +1948,53 @@
       
       if (monthSelect) {
         monthSelect.innerHTML = optionsHtml.join('');
-        if (prevMonth) monthSelect.value = prevMonth;
+        if (prevMonth && (sortedYm.includes(prevMonth) || prevMonth === '')) {
+          monthSelect.value = prevMonth;
+        }
       }
       if (reportMonthSelect) {
         reportMonthSelect.innerHTML = optionsHtml.join('');
-        if (prevRepMonth) reportMonthSelect.value = prevRepMonth;
+        if (prevRepMonth && (sortedYm.includes(prevRepMonth) || prevRepMonth === '')) {
+          reportMonthSelect.value = prevRepMonth;
+        }
       }
+    }
+
+    const monthPickerInput = $('#monthPickerInput');
+    const reportMonthPicker = $('#reportMonthPicker');
+
+    if (monthSelect) {
+      monthSelect.addEventListener('change', () => {
+        if (monthPickerInput) monthPickerInput.value = monthSelect.value;
+        currentFilterKpi = null;
+        updateKpiHighlight();
+        currentPage = 1;
+        render();
+      });
+    }
+
+    if (monthPickerInput) {
+      monthPickerInput.addEventListener('change', () => {
+        if (monthSelect) monthSelect.value = monthPickerInput.value;
+        currentFilterKpi = null;
+        updateKpiHighlight();
+        currentPage = 1;
+        render();
+      });
+    }
+
+    if (reportMonthSelect) {
+      reportMonthSelect.addEventListener('change', () => {
+        if (reportMonthPicker) reportMonthPicker.value = reportMonthSelect.value;
+        updateMonthlyReport();
+      });
+    }
+
+    if (reportMonthPicker) {
+      reportMonthPicker.addEventListener('change', () => {
+        if (reportMonthSelect) reportMonthSelect.value = reportMonthPicker.value;
+        updateMonthlyReport();
+      });
     }
 
     /* Filtros reactivos */
@@ -1994,16 +2006,16 @@
           if (analystSelect) analystSelect.value = '';
         }
         currentPage = 1;
-        fetchRemote();
+        render();
       });
     }
 
-    [analystSelect, statusSelect, monthSelect].forEach(el => {
+    [analystSelect, statusSelect].forEach(el => {
       if (el) el.addEventListener('change', () => {
         currentFilterKpi = null;
         updateKpiHighlight();
         currentPage = 1;
-        fetchRemote();
+        render();
       });
     });
 
@@ -2099,12 +2111,15 @@
         rows = rows.filter(x => String(x.estado) === st);
       }
 
-      if (analystSelect.value) {
-        rows = rows.filter(x => String(x.analista) === analystSelect.value);
+      if (viewSelect.value === 'mis' && currentAnalystUser) {
+        rows = rows.filter(x => String(x.analista).trim() === currentAnalystUser.nombre.trim());
+      } else if (analystSelect.value) {
+        rows = rows.filter(x => String(x.analista).trim() === analystSelect.value.trim());
       }
 
-      if (monthSelect.value) {
-        rows = rows.filter(x => extractYm(x.fecha) === monthSelect.value);
+      const activeYm = (monthSelect && monthSelect.value) || (monthPickerInput && monthPickerInput.value);
+      if (activeYm) {
+        rows = rows.filter(x => extractYm(x.fecha) === activeYm);
       }
       return rows;
     }
@@ -2136,13 +2151,13 @@
     /* ==================== RENDER DE TABLA COMPACTA ==================== */
     function render(countersFromAPI){
       const allRows = currentFilteredRows();
-      if (countersFromAPI && lastSource === 'Google Sheets' && !monthSelect.value && !currentFilterKpi) {
+      if (countersFromAPI && lastSource === 'Google Sheets' && !monthSelect.value && !currentFilterKpi && !statusSelect.value && !analystSelect.value && viewSelect.value !== 'mis') {
         setCounters(countersFromAPI);
       } else {
         setCounters(computeCounters(currentBaseRows()));
       }
 
-      syncBadge.innerHTML = `🟢 ${lastSource}`;
+      syncBadge.innerHTML = lastSource === 'Google Sheets' ? '🟢 Google Sheets' : '🟡 Local';
       syncBadge.style.background = lastSource === 'Google Sheets' ? '#ecfdf5' : '#fef3c7';
       syncBadge.style.color = lastSource === 'Google Sheets' ? '#059669' : '#b45309';
 
@@ -2355,20 +2370,25 @@
     /* ==================== INFORME MENSUAL Y GRÁFICAS ==================== */
     if (btnOpenMonthlyReport) {
       btnOpenMonthlyReport.addEventListener('click', () => {
-        if (monthSelect.value && reportMonthSelect) {
-          reportMonthSelect.value = monthSelect.value;
+        const activeYm = (monthSelect && monthSelect.value) || (monthPickerInput && monthPickerInput.value);
+        if (activeYm) {
+          if (reportMonthSelect) reportMonthSelect.value = activeYm;
+          if (reportMonthPicker) reportMonthPicker.value = activeYm;
+        } else {
+          if (reportMonthSelect) reportMonthSelect.value = '';
+          if (reportMonthPicker) reportMonthPicker.value = '';
         }
         updateMonthlyReport();
         reportModal.showModal();
       });
     }
 
-    if (reportMonthSelect) reportMonthSelect.addEventListener('change', updateMonthlyReport);
-    if (reportAnalystSelect) reportAnalystSelect.addEventListener('change', updateMonthlyReport);
-
     function updateMonthlyReport() {
       const allTickets = Array.isArray(ticketsRemote) ? ticketsRemote : ticketsLocal;
-      const selYm = reportMonthSelect ? reportMonthSelect.value : '';
+      let selYm = reportMonthSelect ? reportMonthSelect.value : '';
+      if (!selYm && reportMonthPicker && reportMonthPicker.value) {
+        selYm = reportMonthPicker.value;
+      }
       const selAnalyst = reportAnalystSelect ? reportAnalystSelect.value : '';
 
       let filtered = allTickets.filter(t => {
@@ -2398,9 +2418,18 @@
       const tramites = abiertos + enProceso;
       const pctCerrados = total ? ((cerrados / total) * 100).toFixed(1) : '0.0';
       const pctTramite = total ? ((tramites / total) * 100).toFixed(1) : '0.0';
-      const monthName = (reportMonthSelect && reportMonthSelect.selectedIndex >= 0) 
-        ? reportMonthSelect.options[reportMonthSelect.selectedIndex]?.text 
-        : 'el período seleccionado';
+      
+      let monthName = 'el período seleccionado';
+      if (reportMonthSelect && reportMonthSelect.value && reportMonthSelect.selectedIndex >= 0) {
+        monthName = reportMonthSelect.options[reportMonthSelect.selectedIndex]?.text.replace(/\s*\(\d+\)$/, '');
+      } else if (selYm) {
+        const [y, m] = selYm.split('-');
+        const dObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+        const l = dObj.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+        monthName = l.charAt(0).toUpperCase() + l.slice(1);
+      } else {
+        monthName = 'todos los meses registrados';
+      }
 
       reportSummaryText.innerHTML = `
         <p>Durante <strong>${monthName}</strong>, el área de TI atendió un total de <strong>${total} solicitudes</strong>${selAnalyst ? ` asignadas a <strong>${selAnalyst}</strong>` : ''}, clasificados principalmente entre incidentes y requerimientos.</p>
@@ -2485,29 +2514,42 @@
       });
     }
 
-    /* ==================== LLAMADOS HTTP ==================== */
+    /* ==================== LLAMADOS HTTP (RÁPIDOS Y COMPLETOS) ==================== */
     async function fetchRemote(){
-      try {
-        const params = new URLSearchParams();
-        params.set('action', 'list');
-        params.set('view', viewSelect.value);
-        if (analystSelect.value) params.set('analyst', analystSelect.value);
-        if (statusSelect.value === 'pendientes') params.set('state', 'pendientes');
-        else if (statusSelect.value) params.set('status', statusSelect.value);
-        if (monthSelect.value) params.set('ym', monthSelect.value);
-        params.set('limit', '2500');
+      syncBadge.innerHTML = '🟡 Sincronizando…';
+      syncBadge.style.background = '#fef3c7';
+      syncBadge.style.color = '#b45309';
 
-        const res = await fetch(WEB_APP_URL + '?' + params.toString());
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+        const res = await fetch(`${WEB_APP_URL}?action=list&limit=5000`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         const data = await res.json();
         if (data && data.ok && Array.isArray(data.items)){
           ticketsRemote = data.items;
           populateMonthsOptions(ticketsRemote);
           render(data.counters);
+          syncBadge.innerHTML = '🟢 Google Sheets';
+          syncBadge.style.background = '#ecfdf5';
+          syncBadge.style.color = '#059669';
         } else {
-          ticketsRemote = null; render();
+          ticketsRemote = null;
+          populateMonthsOptions(ticketsLocal);
+          render();
+          syncBadge.innerHTML = '🟡 Local';
+          syncBadge.style.background = '#fef3c7';
+          syncBadge.style.color = '#b45309';
         }
       } catch {
-        ticketsRemote = null; render();
+        ticketsRemote = null;
+        populateMonthsOptions(ticketsLocal);
+        render();
+        syncBadge.innerHTML = '🟡 Local';
+        syncBadge.style.background = '#fef3c7';
+        syncBadge.style.color = '#b45309';
       }
     }
 
@@ -2660,11 +2702,12 @@
     });
 
     /* ==================== INICIALIZACIÓN ==================== */
-    async function init(){
+    function init(){
       checkAuthSession();
-      await fetchContacts();
       populateMonthsOptions(ticketsLocal);
       render();
+      fetchRemote();
+      fetchContacts();
       setInterval(() => { if (!document.hidden && currentAnalystUser) fetchRemote(); }, AUTO_REFRESH_MS);
     }
     init();
