@@ -2350,7 +2350,7 @@
     /* ==================== INICIALIZACIÓN ==================== */
     async function init(){
       checkAuthSession();
-      await fetchContacts();
+      await fetchPersonnelDirectory(); // <-- Carga todos los empleados de la base de datos
       render();
       setInterval(() => { if (!document.hidden && currentAnalystUser) fetchRemote(); }, AUTO_REFRESH_MS);
     }
